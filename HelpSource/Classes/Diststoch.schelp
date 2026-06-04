@@ -62,6 +62,12 @@ argument:: durStep
 Scale of the duration random-walk step (how fast the pitch drifts within
 code::minfreq:: .. code::maxfreq::). Default 0.05.
 
+argument:: ampJump
+Blends the amplitude update from an incremental walk toward an absolute,
+memoryless redraw across code::ampLo:: .. code::ampHi::. 0 = correlated random
+walk (smooth drift); 1 = each control point jumps independently across the full
+range (maximal, decorrelated jumps). Default 0.
+
 argument:: ampLo
 Lower amplitude barrier. Default -1.0. Asymmetry vs code::ampHi:: adds DC.
 
@@ -106,6 +112,16 @@ s.boot;
 	Diststoch.ar(100, 400, 12,
 		ampDist: 1, ampDistParam: 0.5, ampDistParamWalk: 0.02,
 		ampStep: 0.2, barrierHi: MouseX.kr(0, 3).round
+	) * 0.2 ! 2
+}.play
+)
+
+// ampJump: sweep from smooth walk (left) to memoryless jumps (right).
+(
+{
+	Diststoch.ar(150, 150, 16,        // fixed pitch to hear the timbre change
+		ampDist: 0, ampStep: 0.15,
+		ampJump: MouseX.kr(0, 1)
 	) * 0.2 ! 2
 }.play
 )

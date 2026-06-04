@@ -22,7 +22,7 @@ enum {
     MinFreq, MaxFreq, KNum,
     AmpDist, AmpDistP, AmpDistPWalk,
     DurDist, DurDistP, DurDistPWalk,
-    AmpStep, DurStep,
+    AmpStep, DurStep, AmpJump,
     AmpLo, AmpHi, BarrierLo, BarrierHi,
     Interp
 };
@@ -44,6 +44,7 @@ void Diststoch_next(Diststoch* unit, int inNumSamples) {
     const double durDistPWalk = ZIN0(DurDistPWalk);
     const double ampStep = ZIN0(AmpStep);
     const double durStep = ZIN0(DurStep);
+    const double ampJump = t_clamp(ZIN0(AmpJump), 0.0, 1.0);
     const double ampLo = ZIN0(AmpLo);
     const double ampHi = ZIN0(AmpHi);
     const int barrierLo = (int)ZIN0(BarrierLo);
@@ -70,8 +71,12 @@ void Diststoch_next(Diststoch* unit, int inNumSamples) {
             const double effAmpP = t_mirror(ampDistP + ampPWalk, 0.0, 1.0);
             const double effDurP = t_mirror(durDistP + durPWalk, 0.0, 1.0);
 
-            double a = ampMem[i];
-            a += ampStep * t_distribution(ampDist, (float)effAmpP, rgen.frand());
+            // ampJump blends the incremental walk toward an absolute redraw
+            // across [ampLo,ampHi]: 0 = correlated walk, 1 = memoryless jumps.
+            const double r = t_distribution(ampDist, (float)effAmpP, rgen.frand());
+            const double walked = ampMem[i] + ampStep * r;
+            const double absolute = 0.5 * (ampLo + ampHi) + 0.5 * (ampHi - ampLo) * r;
+            double a = walked + ampJump * (absolute - walked);
             a = t_barrier(a, ampLo, ampHi, barrierLo, barrierHi, rgen.frand());
             ampMem[i] = a;
             main.nextAmp = a;
