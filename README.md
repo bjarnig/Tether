@@ -18,9 +18,9 @@ controllable noise band can coexist — continuously morphable from tone to nois
 | UGen | Status | Idea |
 |------|--------|------|
 | **Gendreve** | working | Mean-reverting walk. Stiffness = pitch↔noise dial. Dual output: signal + template-locked reference, so `out0 - out1` is the stochastic residual. |
-| **Diststoch** | working | Free walk with evolving distribution parameters (a secondary walk on the distribution shape) and asymmetric barriers (reflect/wrap/clip/randomize per bound → DC offset & even-harmonic grit). |
-| Seggen | planned | A frequency sequence drives macro-pitch; each segment's waveform is a walking control-point set. |
-| Chaosgen | planned | The walk's random source is a tunable chaotic map — order→noise via the bifurcation parameter. |
+| **Diststoch** | working | Free walk with evolving distribution parameters, asymmetric barriers (reflect/wrap/clip/randomize per bound → DC offset & even-harmonic grit), and amp/dur `jump` controls to break the walk correlation into memoryless leaps. |
+| **Seggen** | working | A frequency sequence sets exact pitch one cycle at a time; each cycle's waveform is a walking control-point set. |
+| **Chaosgen** | working | The walk's random source is a logistic map — `chaos` (bifurcation) morphs order→noise. |
 
 Planned follow-ups: selectable oversampling (anti-aliasing), buffer-backed
 arbitrary templates.

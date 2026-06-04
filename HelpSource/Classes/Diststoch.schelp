@@ -68,6 +68,11 @@ memoryless redraw across code::ampLo:: .. code::ampHi::. 0 = correlated random
 walk (smooth drift); 1 = each control point jumps independently across the full
 range (maximal, decorrelated jumps). Default 0.
 
+argument:: durJump
+Same as code::ampJump:: but for duration: 0 = pitch drifts smoothly; 1 = the
+period jumps independently across code::minfreq:: .. code::maxfreq:: each control
+point. Default 0.
+
 argument:: ampLo
 Lower amplitude barrier. Default -1.0. Asymmetry vs code::ampHi:: adds DC.
 

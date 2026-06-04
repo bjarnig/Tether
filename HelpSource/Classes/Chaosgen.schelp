@@ -1,0 +1,75 @@
+class:: Chaosgen
+summary:: Breakpoint oscillator driven by a chaotic map
+related:: Classes/Diststoch, Classes/Gendreve
+categories:: UGens>Generators>Stochastic
+
+description::
+
+A breakpoint oscillator whose control-point values come from a logistic map
+(code::x -> chaos * x * (1 - x)::) instead of a random walk. The code::chaos::
+parameter is the map's bifurcation value and tunes it along the order→chaos
+route:
+
+list::
+## around 2.8–3.0 — a fixed point — the control points settle to one value
+(near-static / DC); the musically useful range starts higher.
+## 3.0–3.57 — period doubling — repeating cycles of values → harmonically rich,
+stable timbres.
+## above ~3.57 (toward 4) — chaotic — aperiodic values → noise.
+::
+
+Independent map states drive amplitude and duration, so code::chaos:: morphs the
+whole texture from tone toward noise.
+
+note:: code::knum:: is fixed when the UGen is built; it cannot be modulated. ::
+
+classmethods::
+
+method:: ar
+
+argument:: minfreq
+Lower bound of the fundamental frequency (Hz).
+
+argument:: maxfreq
+Upper bound of the fundamental frequency (Hz). In the chaotic regime the duration
+map sweeps the pitch across this range.
+
+argument:: knum
+Number of control points per cycle (fixed scalar). Default 12.
+
+argument:: chaos
+Logistic-map bifurcation parameter, clipped to 2.5 .. 3.999. The order→noise
+dial; most musical from ~3.3 upward. Default 3.7.
+
+argument:: ampDist
+Distribution shaping the control-point value: 0 linear, 1 cauchy, 2 logistic,
+3 hyperbcos, 4 arcsine, 5 exponential, 6 sinus. Default 0.
+
+argument:: ampDistParam
+Parameter of the distribution, 0 to 1. Default 0.5.
+
+argument:: interp
+Segment interpolation: 0 sample-and-hold, 1 linear, 2 cosine. Default 1.
+
+argument:: mul
+
+argument:: add
+
+examples::
+
+code::
+s.boot;
+
+// Sweep the bifurcation: ordered (left) to chaotic/noisy (right).
+(
+{
+	Chaosgen.ar(120, 480, 12, chaos: MouseX.kr(3.2, 3.999)) * 0.2 ! 2
+}.play
+)
+
+// Period-doubling region: a stable, repeating inharmonic tone.
+{ Chaosgen.ar(200, 200, 16, chaos: 3.5) * 0.2 ! 2 }.play;
+
+// Fully chaotic: pitch and timbre scatter into noise.
+{ Chaosgen.ar(80, 800, 12, chaos: 3.99) * 0.2 ! 2 }.play;
+::

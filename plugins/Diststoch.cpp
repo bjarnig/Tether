@@ -22,7 +22,7 @@ enum {
     MinFreq, MaxFreq, KNum,
     AmpDist, AmpDistP, AmpDistPWalk,
     DurDist, DurDistP, DurDistPWalk,
-    AmpStep, DurStep, AmpJump,
+    AmpStep, DurStep, AmpJump, DurJump,
     AmpLo, AmpHi, BarrierLo, BarrierHi,
     Interp
 };
@@ -45,6 +45,7 @@ void Diststoch_next(Diststoch* unit, int inNumSamples) {
     const double ampStep = ZIN0(AmpStep);
     const double durStep = ZIN0(DurStep);
     const double ampJump = t_clamp(ZIN0(AmpJump), 0.0, 1.0);
+    const double durJump = t_clamp(ZIN0(DurJump), 0.0, 1.0);
     const double ampLo = ZIN0(AmpLo);
     const double ampHi = ZIN0(AmpHi);
     const int barrierLo = (int)ZIN0(BarrierLo);
@@ -81,8 +82,10 @@ void Diststoch_next(Diststoch* unit, int inNumSamples) {
             ampMem[i] = a;
             main.nextAmp = a;
 
-            double d = durMem[i];
-            d += durStep * t_distribution(durDist, (float)effDurP, rgen.frand());
+            const double rd = t_distribution(durDist, (float)effDurP, rgen.frand());
+            const double dwalked = durMem[i] + durStep * rd;
+            const double dabsolute = 0.5 + 0.5 * rd; // spans [0,1] when rd in [-1,1]
+            double d = dwalked + durJump * (dabsolute - dwalked);
             d = t_clamp(d, 0.0, 1.0);
             durMem[i] = d;
 
