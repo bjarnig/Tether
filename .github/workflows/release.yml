@@ -1,0 +1,72 @@
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+env:
+  # SuperCollider source tag whose sc_api_version matches the target scsynth.
+  # 3.12–3.14.x = API v3; develop/3.15-dev = v6.
+  SC_TAG: Version-3.14.1
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-latest,   name: macOS }
+          - { os: ubuntu-latest,  name: Linux }
+          - { os: windows-latest, name: Windows }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: project
+
+      - name: Checkout SuperCollider source (${{ env.SC_TAG }})
+        uses: actions/checkout@v4
+        with:
+          repository: supercollider/supercollider
+          ref: ${{ env.SC_TAG }}
+          path: supercollider
+          submodules: false
+
+      - name: Configure
+        shell: bash
+        run: |
+          ARCH_FLAG=""
+          if [ "${{ matrix.name }}" = "macOS" ]; then
+            ARCH_FLAG="-DCMAKE_OSX_ARCHITECTURES=x86_64;arm64"
+          fi
+          cmake -S project -B build \
+            -DSC_PATH="$GITHUB_WORKSPACE/supercollider" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_INSTALL_PREFIX=install \
+            $ARCH_FLAG
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Install
+        run: cmake --install build --config Release
+
+      - name: Package
+        shell: bash
+        working-directory: install
+        run: cmake -E tar cf "../Tether-${{ matrix.name }}.zip" --format=zip Tether
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: Tether-${{ matrix.name }}.zip
+          body: |
+            Unsigned plugin binaries. On macOS, clear the quarantine flag after unzipping:
+
+                xattr -dr com.apple.quarantine /path/to/Tether
+
+            Install: copy the `Tether` folder into your SuperCollider Extensions folder
+            (`Platform.userExtensionDir`), recompile the class library, and reboot the server.

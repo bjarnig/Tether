@@ -28,24 +28,36 @@ arbitrary templates.
 ## Layout
 
 ```
-include/                 shared engine
-  Distributions.hpp      probability distributions for the step
-  BreakpointEngine.hpp   barriers, parametric template, segment interpolation
-plugins/<Name>/          <Name>.{hpp,cpp,sc,schelp}
-CMakeLists.txt
+plugins/<Name>.cpp       one .cpp per UGen (plain-C server-plugin API)
+plugins/shared.hpp       distributions, barriers, template, interpolation
+classes/<Name>.sc        language-side class
+HelpSource/Classes/      <Name>.schelp
+cmake_modules/           vendored from <SC_PATH>/tools/cmake_gen/
+CMakeLists.txt           foreach over UGen names → sc_add_server_plugin
+build.sh                 configure + build + install to Extensions
 ```
+
+Adding a UGen = a `.cpp` + `.sc` + `.schelp` and one name in the `CMakeLists.txt`
+`foreach` list.
 
 ## Build
 
-Requires a SuperCollider **source tree** for the plugin headers (a built install
-is not enough), and its plugin `api_version` **must match your installed
-scsynth** — otherwise the server rejects the `.scx` with "API version mismatch".
-Point `SC_PATH` at a matching source tree:
+Requires a SuperCollider **source tree** for the plugin headers, whose plugin
+`api_version` **must match your installed scsynth** — otherwise the server
+rejects the plugin with "API version mismatch" (3.12–3.14.x = v3,
+develop/3.15-dev = v6). If your dev checkout doesn't match, add a worktree of the
+right tag:
 
 ```sh
-cmake -S . -B build -DSC_PATH=/path/to/supercollider -DCMAKE_BUILD_TYPE=Release
-cmake --build build
+git -C /path/to/supercollider worktree add --detach ../supercollider-3.14.1 Version-3.14.1
 ```
 
-Copy each `.scx` (plus its `.sc` and `.schelp`) into your SuperCollider
-`Extensions` folder (`Platform.userExtensionDir`) and recompile the class library.
+Then build and install into the user Extensions folder:
+
+```sh
+./build.sh /path/to/supercollider-3.14.1
+```
+
+Afterwards, recompile the class library (Cmd/Ctrl-Shift-L) and reboot the server.
+Multi-platform binaries are produced by tagging `vX.Y.Z` (see
+`.github/workflows/release.yml`).

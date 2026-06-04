@@ -1,47 +1,46 @@
 cmake_minimum_required(VERSION 3.12)
-project(Tether LANGUAGES CXX)
+project(Tether)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake_modules ${CMAKE_MODULE_PATH})
+include(SuperColliderServerPlugin RESULT_VARIABLE server_plugin_found)
+include(SuperColliderCompilerConfig RESULT_VARIABLE compiler_config_found)
+if(NOT server_plugin_found OR NOT compiler_config_found)
+    message(FATAL_ERROR "cmake_modules not found; vendor them from <SC_PATH>/tools/cmake_gen/")
+endif()
 
-# SuperCollider source tree (for plugin headers).
-# Override with -DSC_PATH=/path/to/supercollider or the SC_PATH env var.
-if(NOT SC_PATH)
-    if(DEFINED ENV{SC_PATH})
-        set(SC_PATH $ENV{SC_PATH})
+option(SCSYNTH "Build scsynth plugins" ON)
+option(SUPERNOVA "Build supernova plugins" OFF)
+
+sc_check_sc_path("${SC_PATH}")
+message(STATUS "Found SuperCollider: ${SC_PATH}")
+include("${SC_PATH}/SCVersion.txt")
+message(STATUS "Building for SuperCollider ${SC_VERSION}")
+
+sc_do_initial_compiler_config()
+
+if(NOT CMAKE_BUILD_TYPE)
+    set(CMAKE_BUILD_TYPE Release CACHE STRING "" FORCE)
+endif()
+
+# Default install into the user Extensions folder unless overridden.
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    if(APPLE)
+        set(_ext "$ENV{HOME}/Library/Application Support/SuperCollider/Extensions")
+    elseif(WIN32)
+        set(_ext "$ENV{LOCALAPPDATA}/SuperCollider/Extensions")
     else()
-        set(SC_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../../supercollider")
+        set(_ext "$ENV{HOME}/.local/share/SuperCollider/Extensions")
     endif()
+    set(CMAKE_INSTALL_PREFIX "${_ext}" CACHE PATH "" FORCE)
 endif()
-get_filename_component(SC_PATH "${SC_PATH}" ABSOLUTE)
-if(NOT EXISTS "${SC_PATH}/include/plugin_interface/SC_PlugIn.hpp")
-    message(FATAL_ERROR "SC_PlugIn.hpp not found under SC_PATH='${SC_PATH}'. "
-        "Set -DSC_PATH=/path/to/supercollider source tree.")
-endif()
-message(STATUS "Tether using SC_PATH: ${SC_PATH}")
+message(STATUS "Install prefix: ${CMAKE_INSTALL_PREFIX}")
 
-# api_version must match your installed scsynth or the .scx is rejected.
-file(STRINGS "${SC_PATH}/include/plugin_interface/SC_InterfaceTable.h" _api_line
-    REGEX "sc_api_version = ")
-message(STATUS "Tether: SC source ${_api_line} — must match your scsynth build")
-
-include_directories(
-    "${SC_PATH}/include/plugin_interface"
-    "${SC_PATH}/include/common"
-    "${CMAKE_CURRENT_SOURCE_DIR}/include"
-)
-
-set(CMAKE_SHARED_MODULE_PREFIX "")
-if(APPLE OR WIN32)
-    set(CMAKE_SHARED_MODULE_SUFFIX ".scx")
-endif()
-
-function(tether_plugin name source)
-    add_library(${name} MODULE ${source})
-    if(NOT (APPLE OR WIN32))
-        target_compile_options(${name} PRIVATE -fPIC)
-    endif()
-endfunction()
-
-tether_plugin(Gendreve plugins/Gendreve/Gendreve.cpp)
-tether_plugin(Diststoch plugins/Diststoch/Diststoch.cpp)
+set(TETHER_UGENS Gendreve Diststoch)
+foreach(ugen ${TETHER_UGENS})
+    sc_add_server_plugin(
+        "Tether"                              # dest dir under Extensions
+        "${ugen}"                             # registration name
+        "plugins/${ugen}.cpp"
+        "classes/${ugen}.sc"
+        "HelpSource/Classes/${ugen}.schelp")
+endforeach()
