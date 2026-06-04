@@ -1,0 +1,112 @@
+class:: Diststoch
+summary:: Free stochastic synthesis with evolving distributions and asymmetric barriers
+related:: Classes/Gendreve
+categories:: UGens>Generators>Stochastic
+
+description::
+
+A breakpoint oscillator with a free (non mean-reverting — see
+link::Classes/Gendreve::) random walk, whose expressive surface is two effects:
+
+definitionlist::
+## evolving distribution parameters || the parameter of the amplitude/duration
+probability distribution is itself slowly random-walked, so the statistical
+character of the texture drifts over time.
+## asymmetric barriers || the lower and upper amplitude bounds can have
+different bounds emphasis::and:: different barrier behaviours (reflect, wrap,
+clip, randomize). Asymmetry injects a DC offset and even harmonics — a distinct
+"grit" not available from symmetric mirrors.
+::
+
+Pitch comes from the periodic re-traversal of the code::knum:: control points;
+the distributions and barriers shape the noise character riding on it.
+
+classmethods::
+
+method:: ar
+
+argument:: minfreq
+Lower bound of the fundamental frequency (Hz).
+
+argument:: maxfreq
+Upper bound of the fundamental frequency (Hz).
+
+argument:: knum
+Number of control points (fixed scalar). Default 12.
+
+argument:: ampDist
+Amplitude step distribution: 0 linear, 1 cauchy, 2 logistic, 3 hyperbcos,
+4 arcsine, 5 exponential, 6 sinus. Default 0.
+
+argument:: ampDistParam
+Base parameter of the amplitude distribution, 0 to 1. Default 0.5.
+
+argument:: ampDistParamWalk
+Step size of the secondary random walk on code::ampDistParam:: (0 = static).
+Default 0.
+
+argument:: durDist
+Duration step distribution (same codes as code::ampDist::). Default 0.
+
+argument:: durDistParam
+Base parameter of the duration distribution, 0 to 1. Default 0.5.
+
+argument:: durDistParamWalk
+Step size of the secondary random walk on code::durDistParam::. Default 0.
+
+argument:: ampStep
+Scale of the amplitude random-walk step. Larger = faster, noisier wandering.
+Default 0.1.
+
+argument:: durStep
+Scale of the duration random-walk step (how fast the pitch drifts within
+code::minfreq:: .. code::maxfreq::). Default 0.05.
+
+argument:: ampLo
+Lower amplitude barrier. Default -1.0. Asymmetry vs code::ampHi:: adds DC.
+
+argument:: ampHi
+Upper amplitude barrier. Default 1.0.
+
+argument:: barrierLo
+Behaviour at the lower bound: 0 mirror, 1 wrap, 2 clip, 3 randomize. Default 0.
+
+argument:: barrierHi
+Behaviour at the upper bound (same codes). Default 0.
+
+argument:: interp
+Segment interpolation: 0 sample-and-hold, 1 linear, 2 cosine. Default 1.
+
+argument:: mul
+
+argument:: add
+
+examples::
+
+code::
+s.boot;
+
+// Symmetric mirror, cauchy steps.
+{ Diststoch.ar(120, 480, 12, ampDist: 1, ampDistParam: 0.3, ampStep: 0.2) * 0.2 ! 2 }.play;
+
+// Asymmetric barriers: reflect the bottom, clip the top -> DC + even-harmonic grit.
+(
+{
+	Diststoch.ar(80, 200, 14,
+		ampDist: 1, ampDistParam: 0.4, ampStep: 0.25,
+		ampLo: -0.6, ampHi: 1.0,
+		barrierLo: 0, barrierHi: 2
+	) * 0.2 ! 2
+}.play
+)
+
+// Evolving distribution: let the texture's character drift over time.
+(
+{
+	Diststoch.ar(100, 400, 12,
+		ampDist: 1, ampDistParam: 0.5, ampDistParamWalk: 0.02,
+		ampStep: 0.2, barrierHi: MouseX.kr(0, 3).round
+	) * 0.2 ! 2
+}.play
+)
+::
