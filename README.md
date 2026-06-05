@@ -12,8 +12,8 @@ Experimental SuperCollider UGens for digital synthesis.
 - **Chaosgen** — breakpoint values driven by a logistic map.
 - **Varperiod** — live control-point count; sweeps timbral density.
 - **Fracflight** — mean-reverting walk with fractional (Hurst) and Lévy motion.
-- **Grainstoch** — stochastic pulsar; an emission pitch carrying walking grains.
-- **Probstoch** — sparse grains on a fixed-pitch waveform; a grain-density dial.
+- **Grainstoch** — an emission pitch carrying walking grains.
+- **Probstoch** — sparse grains on a fixed-pitch waveform.
 
 ## Build
 
