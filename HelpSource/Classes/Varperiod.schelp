@@ -1,0 +1,85 @@
+class:: Varperiod
+summary:: Breakpoint oscillator with a live control-point count
+related:: Classes/Diststoch, Classes/Gendreve
+categories:: UGens>Generators>Stochastic
+
+description::
+
+A breakpoint walk in which the number of active control points per period,
+code::knum::, can change at run time between 1 and code::maxCPs::. Fewer points
+give a sparse, low-order waveform; more points give a denser, brighter one — so
+modulating code::knum:: sweeps timbral density while the fundamental (set by
+code::minfreq:: / code::maxfreq:: and the duration walk) stays put.
+
+The full control-point memory (code::maxCPs::) is allocated once; points beyond
+the current code::knum:: keep their values and return when code::knum:: grows.
+
+note:: code::maxCPs:: is fixed when the UGen is built; code::knum:: is modulatable
+(control rate). ::
+
+classmethods::
+
+method:: ar
+
+argument:: minfreq
+Lower bound of the fundamental frequency (Hz).
+
+argument:: maxfreq
+Upper bound of the fundamental frequency (Hz).
+
+argument:: maxCPs
+Maximum number of control points (fixed allocation). Default 24.
+
+argument:: knum
+Active control points per period, 1 .. code::maxCPs::. Modulatable. Default 12.
+
+argument:: ampStep
+Scale of the amplitude walk step. Default 0.1.
+
+argument:: durStep
+Scale of the duration walk step (pitch drift within code::minfreq:: .. code::maxfreq::).
+Default 0.05.
+
+argument:: ampDist
+Amplitude step distribution: 0 linear, 1 cauchy, 2 logistic, 3 hyperbcos,
+4 arcsine, 5 exponential, 6 sinus. Default 0.
+
+argument:: ampDistParam
+Parameter of the amplitude distribution, 0 to 1. Default 0.5.
+
+argument:: durDist
+Duration step distribution (same codes). Default 0.
+
+argument:: durDistParam
+Parameter of the duration distribution, 0 to 1. Default 0.5.
+
+argument:: interp
+Segment interpolation: 0 sample-and-hold, 1 linear, 2 cosine. Default 1.
+
+argument:: mul
+
+argument:: add
+
+examples::
+
+code::
+s.boot;
+
+// Sweep the control-point count: sparse to dense at a steady pitch.
+(
+{
+	Varperiod.ar(150, 150, maxCPs: 40,
+		knum: MouseX.kr(2, 40).round,
+		ampStep: 0.2, durStep: 0.0) * 0.2 ! 2
+}.play
+)
+
+// Slow LFO over density for an evolving drone.
+(
+{
+	Varperiod.ar(60, 240, maxCPs: 32,
+		knum: LFNoise0.kr(2).range(3, 32),
+		ampStep: 0.15, durStep: 0.08) * 0.2 ! 2
+}.play
+)
+::

@@ -11,6 +11,8 @@ stochastic, segment-based, and chaotic processes.
 - **Diststoch** — free breakpoint walk; evolving distributions, asymmetric barriers, jump controls.
 - **Cyclegen** — a frequency sequence sets the pitch one cycle at a time; the waveform walks.
 - **Chaosgen** — breakpoint values driven by a logistic map.
+- **Varperiod** — live control-point count; sweeps timbral density.
+- **Fracflight** — mean-reverting walk with fractional (Hurst) and Lévy motion.
 
 ## Build
 

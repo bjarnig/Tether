@@ -102,6 +102,24 @@ static inline long t_seglen(double sr, double minf, double maxf, double r, int k
     return len < 1 ? 1 : len;
 }
 
+// Symmetric alpha-stable (Lévy) deviate via Chambers-Mallows-Stuck, from two
+// uniform deviates r1,r2 in [0,1). alpha 2 = Gaussian, 1 = Cauchy; lower = heavier
+// tails (rare large jumps). Bounded to keep it real-time safe.
+static inline double t_stable(double alpha, double r1, double r2) {
+    alpha = t_clamp(alpha, 0.5, 2.0);
+    const double u = T_PI * (r1 - 0.5) * 0.999;
+    const double w = -std::log(r2 + 1e-9);
+    double x;
+    if (std::fabs(alpha - 1.0) < 1e-6) {
+        x = std::tan(u);
+    } else {
+        const double t1 = std::sin(alpha * u) / std::pow(std::cos(u), 1.0 / alpha);
+        const double t2 = std::pow(std::cos(u - alpha * u) / w, (1.0 - alpha) / alpha);
+        x = t1 * t2;
+    }
+    return t_clamp(x, -30.0, 30.0);
+}
+
 // Per-traversal interpolation state. remain counts samples to the next boundary.
 struct CPState {
     int index;

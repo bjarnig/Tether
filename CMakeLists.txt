@@ -52,7 +52,7 @@ message(STATUS "Install directory: ${CMAKE_INSTALL_PREFIX}")
 
 # Add a UGen by adding its name here (expects plugins/<name>.cpp, classes/<name>.sc,
 # HelpSource/Classes/<name>.schelp).
-foreach(ugen Gendreve Diststoch Cyclegen Chaosgen)
+foreach(ugen Gendreve Diststoch Cyclegen Chaosgen Varperiod Fracflight)
     sc_add_server_plugin(
         "${project_name}"                            # install subdir under the prefix
         "${ugen}"
