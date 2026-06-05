@@ -1,125 +1,54 @@
 class:: Gendreve
-summary:: Mean-reverting stochastic breakpoint oscillator (pitch and noise at once)
+summary:: Mean-reverting stochastic breakpoint oscillator
 related:: Classes/Diststoch
 categories:: UGens>Generators>Stochastic
 
 description::
 
-An oscillator built from a ring of code::knum:: control points traversed at
-audio rate. The control points random-walk, but each is pulled back toward a
-live template shape; the two emphasis::stiffness:: parameters set the balance
-between pitch and noise continuously:
-
-list::
-## high stiffness — control points hug the template — a clean periodic tone.
-## low stiffness — control points walk freely — noise.
-## mid stiffness — a stable pitch with a controllable noise band riding on it,
-emphasis::at the same time::.
-::
-
-Gendreve has emphasis::two outputs::. Output 0 is the audible signal. Output 1
-is a parallel template-locked reference — the pure pitched component — so
-code::out[0] - out[1]:: isolates the stochastic residual, giving a pitch bus and
-a noise bus to mix or filter independently.
-
-note:: code::knum:: is fixed when the UGen is built; it cannot be modulated. ::
+A ring of code::knum:: control points traversed at audio rate. The points
+random-walk but are pulled back toward a template shape by the two
+emphasis::stiffness:: parameters. Two outputs: the signal, and a template-locked
+reference, so code::out[0] - out[1]:: is the stochastic residual. code::knum:: is
+fixed at build time.
 
 classmethods::
 
 method:: ar
-
 argument:: minfreq
-Lower bound of the fundamental frequency (Hz). Also the floor of the duration walk.
-
+Lower fundamental bound (Hz).
 argument:: maxfreq
-Upper bound of the fundamental frequency (Hz). The width between code::minfreq::
-and code::maxfreq:: sets how far duration jitter can detune the pitch.
-
+Upper fundamental bound (Hz).
 argument:: knum
-Number of control points (fixed scalar). More points → richer spectra. Default 12.
-
+Control points (fixed). Default 12.
 argument:: ampStiffness
-Restoring force pulling each control point's amplitude toward the template,
-0 to 1. Default 0.1.
-
+Amplitude restoring force, 0–1. Default 0.1.
 argument:: durStiffness
-Restoring force on each control point's duration (period stability), 0 to 1.
-Default 0.1.
-
+Duration restoring force, 0–1. Default 0.1.
 argument:: ampNoise
-Magnitude of the stochastic step applied to amplitude. Default 0.1.
-
+Amplitude step size. Default 0.1.
 argument:: durNoise
-Magnitude of the stochastic step applied to duration. Default 0.1.
-
+Duration step size. Default 0.1.
 argument:: ampDist
-Amplitude step distribution: 0 linear, 1 cauchy, 2 logistic, 3 hyperbcos,
-4 arcsine, 5 exponential, 6 sinus. Default 0.
-
+Distribution: 0 linear, 1 cauchy, 2 logistic, 3 hyperbcos, 4 arcsine, 5 exponential, 6 sinus. Default 0.
 argument:: ampDistParam
-Parameter of the amplitude distribution, 0 to 1. Default 0.5.
-
+0–1. Default 0.5.
 argument:: durDist
-Duration step distribution (same codes as code::ampDist::). Default 0.
-
+Duration distribution (same codes). Default 0.
 argument:: durDistParam
-Parameter of the duration distribution, 0 to 1. Default 0.5.
-
+0–1. Default 0.5.
 argument:: templateType
-Template shape: 0 sine, 1 saw, 2 triangle, 3 square, 4 flat. Modulatable. Default 0.
-
+0 sine, 1 saw, 2 triangle, 3 square, 4 flat. Default 0.
 argument:: templateSkew
-Phase skew / pulse width, 0 to 1 (0.5 symmetric). Modulatable. Default 0.5.
-
+Pulse width, 0–1. Default 0.5.
 argument:: centerDur
-Position of the reference fundamental between code::minfreq:: and code::maxfreq::,
-0 to 1. Sets the pitch of output 1. Default 0.5.
-
+Reference pitch position, 0–1. Default 0.5.
 argument:: interp
-Segment interpolation: 0 sample-and-hold, 1 linear, 2 cosine. Default 1.
-
+0 hold, 1 linear, 2 cosine. Default 1.
 argument:: mul
-
 argument:: add
 
 examples::
-
 code::
-s.boot;
-
-// A stable tone with a noise band on top; sweep stiffness to morph.
-(
-{
-	var sig = Gendreve.ar(
-		minfreq: 100, maxfreq: 400, knum: 12,
-		ampStiffness: MouseX.kr(0, 1),   // left = noisy, right = pitched
-		durStiffness: MouseY.kr(0, 1),
-		ampNoise: 0.3, durNoise: 0.3,
-		centerDur: 0.5, interp: 1
-	);
-	sig[0] * 0.2 ! 2
-}.play
-)
-
-// Isolate the stochastic residual: signal minus the pitched reference.
-(
-{
-	var g = Gendreve.ar(120, 480, 16, ampStiffness: 0.5, durStiffness: 0.6,
-		ampNoise: 0.4, durNoise: 0.4);
-	var pitched = g[1];
-	var noise = g[0] - g[1];
-	[pitched, noise].sum * 0.2 ! 2;
-}.play
-)
-
-// Sweep the template shape live.
-(
-{
-	Gendreve.ar(80, 200, 10,
-		ampStiffness: 0.7, durStiffness: 0.9,
-		templateType: MouseX.kr(0, 4).round,
-		templateSkew: MouseY.kr(0.05, 0.95)
-	)[0] * 0.2 ! 2
-}.play
-)
+// sweep stiffness (X) and duration stiffness (Y)
+{ Gendreve.ar(100, 400, 12, MouseX.kr(0,1), MouseY.kr(0,1), 0.3, 0.3)[0] * 0.2 ! 2 }.play;
 ::

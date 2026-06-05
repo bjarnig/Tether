@@ -2,8 +2,7 @@
 
 # Tether
 
-Experimental SuperCollider UGens for digital synthesis — oscillators built from
-stochastic, segment-based, and chaotic processes.
+Experimental SuperCollider UGens for digital synthesis.
 
 ## UGens
 

@@ -5,101 +5,46 @@ categories:: UGens>Generators>Stochastic
 
 description::
 
-A breakpoint walk whose motion combines three processes:
-
-definitionlist::
-## mean reversion (Ornstein–Uhlenbeck) || each control point is pulled back
-toward a home value proportional to its distance — code::ampReversion:: toward a
-template shape, code::durReversion:: toward a home pitch (code::centerDur::). The
-timbre orbits a center rather than wandering off.
-## fractional Brownian motion || code::hurst:: (H) adds memory. H = 0.5 is
-ordinary Brownian motion; H > 0.5 is persistent (trends continue — smoother,
-more coherent); H < 0.5 is anti-persistent (reversals likely — rougher).
-## Lévy flights || code::levy:: makes the steps heavy-tailed: mostly small,
-punctuated by rare large jumps. 0 = Gaussian, 1 = Cauchy. Stable regions broken
-by sudden discontinuities.
-::
+A breakpoint walk combining three processes: Ornstein–Uhlenbeck mean reversion
+(each point pulled toward a home value), fractional Brownian motion via the
+code::hurst:: exponent (>0.5 persistent/smooth, <0.5 anti-persistent/rough), and
+Lévy steps via code::levy:: (heavy tails — rare large jumps). code::knum:: is
+fixed at build time.
 
 classmethods::
 
 method:: ar
-
 argument:: minfreq
-Lower bound of the fundamental frequency (Hz).
-
+Lower fundamental bound (Hz).
 argument:: maxfreq
-Upper bound of the fundamental frequency (Hz).
-
+Upper fundamental bound (Hz).
 argument:: knum
-Number of control points (fixed scalar). Default 12.
-
+Control points (fixed). Default 12.
 argument:: hurst
-Hurst exponent, 0.05 .. 0.95. 0.5 = Brownian; >0.5 persistent/smooth;
-<0.5 anti-persistent/rough. Default 0.5.
-
+Hurst exponent, 0.05–0.95 (0.5 = Brownian). Default 0.5.
 argument:: levy
-Heavy-tailedness of the steps, 0 (Gaussian) to 1 (Cauchy). Higher = rarer but
-larger jumps. Default 0.
-
+Step tail weight, 0 Gaussian – 1 Cauchy. Default 0.
 argument:: ampReversion
-Strength of the pull on amplitude toward the template, 0 to 1. 0 = free flight.
-Default 0.1.
-
+Pull on amplitude toward the template, 0–1. Default 0.1.
 argument:: ampStep
-Scale of the amplitude step. Default 0.1.
-
+Amplitude step size. Default 0.1.
 argument:: durReversion
-Strength of the pull on duration toward code::centerDur:: (the home pitch),
-0 to 1. Default 0.1.
-
+Pull on duration toward code::centerDur::, 0–1. Default 0.1.
 argument:: durStep
-Scale of the duration step. Default 0.05.
-
+Duration step size. Default 0.05.
 argument:: centerDur
-Home pitch position between code::minfreq:: and code::maxfreq::, 0 to 1.
-Default 0.5.
-
+Home pitch position, 0–1. Default 0.5.
 argument:: templateType
 Amplitude home shape: 0 sine, 1 saw, 2 triangle, 3 square, 4 flat. Default 0.
-
 argument:: templateSkew
-Phase skew / pulse width of the template, 0 to 1. Default 0.5.
-
+Pulse width, 0–1. Default 0.5.
 argument:: interp
-Segment interpolation: 0 sample-and-hold, 1 linear, 2 cosine. Default 1.
-
+0 hold, 1 linear, 2 cosine. Default 1.
 argument:: mul
-
 argument:: add
 
 examples::
-
 code::
-s.boot;
-
-// A sustained tone orbiting a home pitch (strong reversion).
-(
-{
-	Fracflight.ar(110, 330, 14, hurst: 0.8, levy: 0.0,
-		ampReversion: 0.3, ampStep: 0.25,
-		durReversion: 0.5, durStep: 0.2, centerDur: 0.4) * 0.2 ! 2
-}.play
-)
-
-// Sweep the Hurst exponent: rough/anti-persistent to smooth/persistent.
-(
-{
-	Fracflight.ar(150, 150, 16, hurst: MouseX.kr(0.1, 0.9),
-		ampReversion: 0.1, ampStep: 0.3) * 0.2 ! 2
-}.play
-)
-
-// Lévy flights: stable tone punctured by sudden jumps.
-(
-{
-	Fracflight.ar(120, 300, 12, hurst: 0.6, levy: MouseX.kr(0, 1),
-		ampReversion: 0.4, ampStep: 0.2,
-		durReversion: 0.6, durStep: 0.25) * 0.2 ! 2
-}.play
-)
+// sweep the Hurst exponent: rough to smooth
+{ Fracflight.ar(150, 150, 16, MouseX.kr(0.1, 0.9), ampReversion: 0.1, ampStep: 0.3) * 0.2 ! 2 }.play;
 ::

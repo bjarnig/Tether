@@ -1,133 +1,59 @@
 class:: Diststoch
-summary:: Free stochastic synthesis with evolving distributions and asymmetric barriers
+summary:: Free stochastic breakpoint oscillator with asymmetric barriers
 related:: Classes/Gendreve
 categories:: UGens>Generators>Stochastic
 
 description::
 
-A breakpoint oscillator with a free (non mean-reverting — see
-link::Classes/Gendreve::) random walk, whose expressive surface is two effects:
-
-definitionlist::
-## evolving distribution parameters || the parameter of the amplitude/duration
-probability distribution is itself slowly random-walked, so the statistical
-character of the texture drifts over time.
-## asymmetric barriers || the lower and upper amplitude bounds can have
-different bounds emphasis::and:: different barrier behaviours (reflect, wrap,
-clip, randomize). Asymmetry injects a DC offset and even harmonics — a distinct
-"grit" not available from symmetric mirrors.
-::
-
-Pitch comes from the periodic re-traversal of the code::knum:: control points;
-the distributions and barriers shape the noise character riding on it.
+A breakpoint oscillator with a free random walk. The distribution parameters can
+slowly drift, the amplitude bounds and their barrier behaviours can be asymmetric
+(adding DC and even harmonics), and the code::jump:: controls turn the correlated
+walk into independent, memoryless leaps. code::knum:: is fixed at build time.
 
 classmethods::
 
 method:: ar
-
 argument:: minfreq
-Lower bound of the fundamental frequency (Hz).
-
+Lower fundamental bound (Hz).
 argument:: maxfreq
-Upper bound of the fundamental frequency (Hz).
-
+Upper fundamental bound (Hz).
 argument:: knum
-Number of control points (fixed scalar). Default 12.
-
+Control points (fixed). Default 12.
 argument:: ampDist
-Amplitude step distribution: 0 linear, 1 cauchy, 2 logistic, 3 hyperbcos,
-4 arcsine, 5 exponential, 6 sinus. Default 0.
-
+Distribution: 0 linear, 1 cauchy, 2 logistic, 3 hyperbcos, 4 arcsine, 5 exponential, 6 sinus. Default 0.
 argument:: ampDistParam
-Base parameter of the amplitude distribution, 0 to 1. Default 0.5.
-
+0–1. Default 0.5.
 argument:: ampDistParamWalk
-Step size of the secondary random walk on code::ampDistParam:: (0 = static).
-Default 0.
-
+Drift on code::ampDistParam:: (0 = static). Default 0.
 argument:: durDist
-Duration step distribution (same codes as code::ampDist::). Default 0.
-
+Duration distribution (same codes). Default 0.
 argument:: durDistParam
-Base parameter of the duration distribution, 0 to 1. Default 0.5.
-
+0–1. Default 0.5.
 argument:: durDistParamWalk
-Step size of the secondary random walk on code::durDistParam::. Default 0.
-
+Drift on code::durDistParam::. Default 0.
 argument:: ampStep
-Scale of the amplitude random-walk step. Larger = faster, noisier wandering.
-Default 0.1.
-
+Amplitude walk step size. Default 0.1.
 argument:: durStep
-Scale of the duration random-walk step (how fast the pitch drifts within
-code::minfreq:: .. code::maxfreq::). Default 0.05.
-
+Duration walk step size. Default 0.05.
 argument:: ampJump
-Blends the amplitude update from an incremental walk toward an absolute,
-memoryless redraw across code::ampLo:: .. code::ampHi::. 0 = correlated random
-walk (smooth drift); 1 = each control point jumps independently across the full
-range (maximal, decorrelated jumps). Default 0.
-
+Walk → memoryless redraw, 0–1. Default 0.
 argument:: durJump
-Same as code::ampJump:: but for duration: 0 = pitch drifts smoothly; 1 = the
-period jumps independently across code::minfreq:: .. code::maxfreq:: each control
-point. Default 0.
-
+Same for duration, 0–1. Default 0.
 argument:: ampLo
-Lower amplitude barrier. Default -1.0. Asymmetry vs code::ampHi:: adds DC.
-
+Lower amplitude bound. Default -1.0.
 argument:: ampHi
-Upper amplitude barrier. Default 1.0.
-
+Upper amplitude bound. Default 1.0.
 argument:: barrierLo
-Behaviour at the lower bound: 0 mirror, 1 wrap, 2 clip, 3 randomize. Default 0.
-
+Lower bound behaviour: 0 mirror, 1 wrap, 2 clip, 3 randomize. Default 0.
 argument:: barrierHi
-Behaviour at the upper bound (same codes). Default 0.
-
+Upper bound behaviour (same codes). Default 0.
 argument:: interp
-Segment interpolation: 0 sample-and-hold, 1 linear, 2 cosine. Default 1.
-
+0 hold, 1 linear, 2 cosine. Default 1.
 argument:: mul
-
 argument:: add
 
 examples::
-
 code::
-s.boot;
-
-// Symmetric mirror, cauchy steps.
-{ Diststoch.ar(120, 480, 12, ampDist: 1, ampDistParam: 0.3, ampStep: 0.2) * 0.2 ! 2 }.play;
-
-// Asymmetric barriers: reflect the bottom, clip the top -> DC + even-harmonic grit.
-(
-{
-	Diststoch.ar(80, 200, 14,
-		ampDist: 1, ampDistParam: 0.4, ampStep: 0.25,
-		ampLo: -0.6, ampHi: 1.0,
-		barrierLo: 0, barrierHi: 2
-	) * 0.2 ! 2
-}.play
-)
-
-// Evolving distribution: let the texture's character drift over time.
-(
-{
-	Diststoch.ar(100, 400, 12,
-		ampDist: 1, ampDistParam: 0.5, ampDistParamWalk: 0.02,
-		ampStep: 0.2, barrierHi: MouseX.kr(0, 3).round
-	) * 0.2 ! 2
-}.play
-)
-
-// ampJump: sweep from smooth walk (left) to memoryless jumps (right).
-(
-{
-	Diststoch.ar(150, 150, 16,        // fixed pitch to hear the timbre change
-		ampDist: 0, ampStep: 0.15,
-		ampJump: MouseX.kr(0, 1)
-	) * 0.2 ! 2
-}.play
-)
+// asymmetric barriers: mirror low, clip high
+{ Diststoch.ar(80, 200, 14, ampDist: 1, ampStep: 0.25, ampLo: -0.6, barrierHi: 2) * 0.2 ! 2 }.play;
 ::
