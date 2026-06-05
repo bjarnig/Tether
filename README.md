@@ -1,4 +1,4 @@
-![Tether — waveform traces of the four UGens](images/scope-hero.png)
+![Tether](images/scope-diststoch.png)
 
 # Tether
 
@@ -16,6 +16,8 @@ how tightly each control point is pulled back, so a stable pitch and a
 controllable noise band can coexist — continuously morphable from tone to noise.
 
 ## UGens
+
+![The four UGens](images/scope-hero.png)
 
 | UGen | Status | Idea |
 |------|--------|------|
