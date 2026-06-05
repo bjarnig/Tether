@@ -7,7 +7,7 @@ Experimental SuperCollider UGens for digital synthesis.
 ## UGens
 
 - **Gendreve** : mean-reverting breakpoint walk.
-- **Diststoch** : free breakpoint walk; evolving distributions, asymmetric barriers, jump controls.
+- **Diststoch** : free breakpoint walk; evolving distributions.
 - **Cyclegen** : a frequency sequence sets the pitch one cycle at a time.
 - **Chaosgen** : breakpoint values driven by a logistic map.
 - **Varperiod** : live control-point count for timbral density.
