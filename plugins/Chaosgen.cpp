@@ -1,7 +1,3 @@
-// Tether — Chaosgen
-// Breakpoint oscillator whose control-point values are the output of a logistic
-// map rather than a random walk. The chaos (bifurcation) parameter tunes the
-// map from a fixed point (ordered) through period-doubling to chaos (noise).
 #include "SC_PlugIn.h"
 #include "shared.hpp"
 

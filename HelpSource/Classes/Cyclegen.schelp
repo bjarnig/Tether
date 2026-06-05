@@ -1,0 +1,92 @@
+class:: Cyclegen
+summary:: Sequenced-cycle oscillator with a walking waveform
+related:: Classes/Gendreve, Classes/Diststoch
+categories:: UGens>Generators>Stochastic
+
+description::
+
+A fixed sequence of frequencies sets the pitch exactly, advancing one value per
+cycle (or every code::repeats:: cycles). Within each cycle the waveform is a ring
+of code::knum:: control points seeded from a template shape; they can walk, jump,
+or be tethered back toward the template, so the pitch follows the sequence while
+the timbre evolves.
+
+note:: code::knum:: is fixed when the UGen is built; code::freqs:: is read once
+at build time. ::
+
+classmethods::
+
+method:: ar
+
+argument:: knum
+Control points per cycle (waveform resolution), fixed scalar. Default 8.
+
+argument:: ampStep
+Scale of the per-step amplitude walk. 0 = static waveform. Default 0.05.
+
+argument:: ampDist
+Distribution shaping the walk step: 0 linear, 1 cauchy, 2 logistic, 3 hyperbcos,
+4 arcsine, 5 exponential, 6 sinus. Default 0.
+
+argument:: ampDistParam
+Parameter of the distribution, 0 to 1. Default 0.5.
+
+argument:: ampJump
+Blends the walk toward a memoryless redraw in [-1,1]: 0 = smooth drift, 1 = each
+control point jumps independently. Default 0.
+
+argument:: stiffness
+Restoring force pulling each control point back toward the template shape, 0 to 1.
+0 = free walk; high = the waveform hugs code::templateType::. Default 0.
+
+argument:: templateType
+Waveform the control points are seeded from (and pulled toward by code::stiffness::):
+0 sine, 1 saw, 2 triangle, 3 square, 4 flat. Default 0.
+
+argument:: templateSkew
+Phase skew / pulse width of the template, 0 to 1 (0.5 symmetric). Default 0.5.
+
+argument:: freqMul
+Multiplier applied to every frequency in the sequence (transpose). Default 1.
+
+argument:: repeats
+Number of cycles each frequency is held before the sequence advances. Default 1.
+
+argument:: seqMode
+Sequence traversal: 0 forward, 1 reverse, 2 pingpong, 3 random. Default 0.
+
+argument:: interp
+Segment interpolation: 0 sample-and-hold, 1 linear, 2 cosine. Default 1.
+
+argument:: freqs
+Array of frequencies (Hz) stepped through the sequence. Fixed at build time.
+Default code::#[110, 165, 220, 330]::.
+
+argument:: mul
+
+argument:: add
+
+examples::
+
+code::
+s.boot;
+
+// Sequenced pitches, gently drifting waveform.
+{ Cyclegen.ar(8, ampStep: 0.05, freqs: [110, 165, 220, 330, 277]) * 0.2 ! 2 }.play;
+
+// Tethered to a saw, pingpong through the sequence, two cycles each.
+(
+{
+	Cyclegen.ar(12, ampStep: 0.08, stiffness: 0.5, templateType: 1,
+		repeats: 2, seqMode: 2, freqs: [110, 147, 165, 220]) * 0.2 ! 2
+}.play
+)
+
+// Random order, transposed up an octave, jumpy timbre.
+(
+{
+	Cyclegen.ar(10, ampStep: 0.1, ampJump: 0.6, freqMul: 2, seqMode: 3,
+		freqs: [110, 138, 165, 220]) * 0.2 ! 2
+}.play
+)
+::

@@ -1,8 +1,3 @@
-// Tether — Diststoch
-// Free-walking stochastic breakpoint oscillator. Expressive surface: evolving
-// distribution parameters (a slow secondary walk on the distribution shape) and
-// asymmetric barriers (independent reflect/wrap/clip/randomize per amplitude
-// bound — injects DC offset and even-harmonic grit).
 #include "SC_PlugIn.h"
 #include "shared.hpp"
 

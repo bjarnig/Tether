@@ -1,7 +1,3 @@
-// Tether — Gendreve
-// Breakpoint oscillator whose control points random-walk but are pulled back
-// toward a live template. Stiffness sets the pitch<->noise balance. Output 0 is
-// the signal, output 1 a template-locked reference (out0 - out1 = residual).
 #include "SC_PlugIn.h"
 #include "shared.hpp"
 
