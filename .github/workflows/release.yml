@@ -62,11 +62,20 @@ jobs:
           files: dist/**/*.zip
           fail_on_unmatched_files: true
           body: |
-            Prebuilt SuperCollider plugins.
+            **Tether** — experimental SuperCollider UGens for digital synthesis.
 
-            **Compatibility:** built against SuperCollider 3.14.1 (plugin API v3) —
-            loads in SuperCollider 3.12–3.14.x. Not compatible with 3.15/develop (v6).
+            Prebuilt server plugins: `Gendreve`, `Diststoch`, `Cyclegen`, `Chaosgen`, `Varperiod`, `Fracflight`.
 
-            **Install:** extract the archive for your OS into your SuperCollider
-            Extensions folder, then recompile the class library and reboot the server.
-            macOS (unsigned): `xattr -dr com.apple.quarantine <extracted folder>`.
+            ### Compatibility
+            Built against SuperCollider **3.14.1** (plugin API **v3**) — loads in SuperCollider **3.12–3.14.x**. *Not* compatible with 3.15/develop builds (API v6). Each archive is platform-specific.
+
+            ### Install
+            Extract the archive for your OS into your SuperCollider **Extensions** folder, then recompile the class library (Cmd/Ctrl-Shift-L) and reboot the server.
+            - macOS: `~/Library/Application Support/SuperCollider/Extensions/`
+            - Linux: `~/.local/share/SuperCollider/Extensions/`
+            - Windows: `%LOCALAPPDATA%\SuperCollider\Extensions\`
+
+            **macOS:** the plugins are unsigned, so clear the download quarantine after extracting:
+            ```
+            xattr -dr com.apple.quarantine ~/Library/Application\ Support/SuperCollider/Extensions/Tether
+            ```
