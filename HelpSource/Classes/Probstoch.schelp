@@ -1,0 +1,44 @@
+class:: Probstoch
+summary:: Sparse stochastic grains on a fixed-pitch waveform
+related:: Classes/Grainstoch, Classes/Diststoch
+categories:: UGens>Generators>Stochastic
+
+description::
+
+A breakpoint oscillator at a fixed period, so the pitch (code::freq::) never
+drifts. Each control point is resampled with probability code::prob:: per cycle,
+otherwise it holds — so most of the waveform is stable (pitch) while a tunable
+density of points speckle it with grains (noise). code::prob:: is a grain-density
+dial, distinct from grain magnitude. code::knum:: is fixed at build time.
+
+classmethods::
+
+method:: ar
+argument:: freq
+Fundamental frequency (Hz), exact and steady. Default 200.
+argument:: knum
+Control points per cycle (fixed). Default 16.
+argument:: prob
+Per-point probability of a grain each cycle, 0 (frozen tone) – 1 (full noise). Default 0.1.
+argument:: ampStep
+Grain step size (used when code::jump:: < 1). Default 1.0.
+argument:: jump
+Grain shape: 0 = walk step, 1 = memoryless redraw. Default 1.0.
+argument:: ampDist
+Distribution: 0 linear, 1 cauchy, 2 logistic, 3 hyperbcos, 4 arcsine, 5 exponential, 6 sinus. Default 0.
+argument:: ampDistParam
+0–1. Default 0.5.
+argument:: templateType
+Base waveform (heard at code::prob:: 0): 0 sine, 1 saw, 2 triangle, 3 square, 4 flat. Default 0.
+argument:: templateSkew
+Pulse width, 0–1. Default 0.5.
+argument:: interp
+0 hold, 1 linear, 2 cosine. Default 1.
+argument:: mul
+argument:: add
+
+examples::
+code::
+// steady pitch; sweep grain density (X) from clean tone to noise
+{ Probstoch.ar(200, 16, prob: MouseX.kr(0, 1)) * 0.2 ! 2 }.play;
+::

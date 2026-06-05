@@ -136,6 +136,25 @@ static inline void t_cp_reset(CPState& s) {
     s.curAmp = s.nextAmp = 0.0;
 }
 
+// Interpolate a..b by t in [0,1]. mode: 0 hold, 1 linear, 2 cosine.
+static inline double t_interp(int mode, double a, double b, double t) {
+    switch (mode) {
+    case 0: return a;
+    case 2: return a + (b - a) * (0.5 - 0.5 * std::cos(T_PI * t));
+    default: return a + (b - a) * t;
+    }
+}
+
+// Grain envelope at p in [0,1]. type: 0 rect, 1 hann, 2 triangle, 3 gaussian.
+static inline double t_window(int type, double p) {
+    switch (type) {
+    case 1: return 0.5 - 0.5 * std::cos(2.0 * T_PI * p);
+    case 2: return 1.0 - std::fabs(2.0 * p - 1.0);
+    case 3: { const double x = (p - 0.5) * 5.0; return std::exp(-0.5 * x * x); }
+    default: return 1.0;
+    }
+}
+
 // interp: 0 hold, 1 linear, 2 cosine.
 static inline double t_read(const CPState& s, int interp) {
     const double t = (s.seglen > 0) ? double(s.seglen - s.remain) / double(s.seglen) : 0.0;

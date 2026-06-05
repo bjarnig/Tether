@@ -1,0 +1,45 @@
+class:: Grainstoch
+summary:: Stochastic pulsar oscillator (pitch + granular noise)
+related:: Classes/Probstoch, Classes/Diststoch
+categories:: UGens>Generators>Stochastic
+
+description::
+
+At a fixed emission rate (code::pitch::), one short pulsaret — a windowed ring of
+code::knum:: control points — is emitted per period, then silence. The pulsaret
+walks grain to grain, so the pitch stays exact while the timbre is granular.
+code::duty:: sets the pulsaret length (formant), code::jitter:: randomises the
+emission period (toward an asynchronous granular cloud). code::knum:: is fixed at
+build time.
+
+classmethods::
+
+method:: ar
+argument:: pitch
+Emission rate / fundamental (Hz). Default 100.
+argument:: knum
+Control points per pulsaret (fixed). Default 16.
+argument:: duty
+Pulsaret length as a fraction of the period, 0–1 (formant). Default 0.5.
+argument:: window
+Grain envelope: 0 rect, 1 hann, 2 triangle, 3 gaussian. Default 1.
+argument:: ampStep
+Grain-to-grain walk of the pulsaret shape (0 = identical grains). Default 0.1.
+argument:: ampJump
+Walk → memoryless redraw, 0–1. Default 0.
+argument:: jitter
+Emission-period randomisation, 0 (steady pitch) – 1 (granular cloud). Default 0.
+argument:: ampDist
+Distribution: 0 linear, 1 cauchy, 2 logistic, 3 hyperbcos, 4 arcsine, 5 exponential, 6 sinus. Default 0.
+argument:: ampDistParam
+0–1. Default 0.5.
+argument:: interp
+Pulsaret interpolation: 0 hold, 1 linear, 2 cosine. Default 1.
+argument:: mul
+argument:: add
+
+examples::
+code::
+// short grains, steady pitch; raise jitter (X) toward a granular cloud
+{ Grainstoch.ar(120, 16, duty: 0.4, ampStep: 0.2, jitter: MouseX.kr(0, 1)) * 0.3 ! 2 }.play;
+::
