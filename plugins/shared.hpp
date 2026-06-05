@@ -94,12 +94,14 @@ static inline double t_barrier(double x, double lo, double hi, int modeLo, int m
     return t_clamp(x, lo, hi);
 }
 
-// Samples in one control-point segment for a rate r in [0,1]; knum CPs/period.
-static inline long t_seglen(double sr, double minf, double maxf, double r, int knum) {
+// Phase increment per sample for a control-point rate r in [0,1]; knum CPs per
+// period. Fractional (no integer truncation) so the pitch is exact at any rate.
+// Capped well above Nyquist to bound the advance loop.
+static inline double t_phaseinc(double sr, double minf, double maxf, double r, int knum) {
     double cpRate = (minf + (maxf - minf) * r) * (double)knum;
-    if (cpRate < 0.001) cpRate = 0.001;
-    long len = (long)(sr / cpRate);
-    return len < 1 ? 1 : len;
+    if (cpRate < 0.0) cpRate = 0.0;
+    const double inc = cpRate / sr;
+    return inc > 64.0 ? 64.0 : inc;
 }
 
 // Symmetric alpha-stable (Lévy) deviate via Chambers-Mallows-Stuck, from two
@@ -120,19 +122,20 @@ static inline double t_stable(double alpha, double r1, double r2) {
     return t_clamp(x, -30.0, 30.0);
 }
 
-// Per-traversal interpolation state. remain counts samples to the next boundary.
+// Per-traversal state. phase is the position within the current segment [0,1);
+// inc is the per-sample phase increment (fractional). Advance when phase >= 1.
 struct CPState {
     int index;
-    long remain;
-    long seglen;
+    double phase;
+    double inc;
     double curAmp;
     double nextAmp;
 };
 
 static inline void t_cp_reset(CPState& s) {
     s.index = 0;
-    s.remain = 0;
-    s.seglen = 1;
+    s.phase = 1.0; // >= 1 forces the first segment to be set up on the first sample
+    s.inc = 0.0;
     s.curAmp = s.nextAmp = 0.0;
 }
 
@@ -157,11 +160,5 @@ static inline double t_window(int type, double p) {
 
 // interp: 0 hold, 1 linear, 2 cosine.
 static inline double t_read(const CPState& s, int interp) {
-    const double t = (s.seglen > 0) ? double(s.seglen - s.remain) / double(s.seglen) : 0.0;
-    const double d = s.nextAmp - s.curAmp;
-    switch (interp) {
-    case 0: return s.curAmp;
-    case 2: return s.curAmp + d * (0.5 - 0.5 * std::cos(T_PI * t));
-    default: return s.curAmp + d * t;
-    }
+    return t_interp(interp, s.curAmp, s.nextAmp, s.phase);
 }

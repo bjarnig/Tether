@@ -58,7 +58,9 @@ void Cyclegen_next(Cyclegen* unit, int inNumSamples) {
     CPState main = unit->m_main;
 
     for (int s = 0; s < inNumSamples; ++s) {
-        if (main.remain <= 0) {
+        int g = 0;
+        while (main.phase >= 1.0 && g++ < 64) {
+            main.phase -= 1.0;
             if (segInCycle >= knum) {       // completed a full cycle
                 segInCycle = 0;
                 cycleRepeat++;
@@ -100,12 +102,11 @@ void Cyclegen_next(Cyclegen* unit, int inNumSamples) {
             main.nextAmp = a;
 
             segInCycle++;
-            long len = (long)(sr / (curFreq * knum));
-            main.seglen = len < 1 ? 1 : len;
-            main.remain = main.seglen;
+            const double inc = (curFreq * (double)knum) / sr;
+            main.inc = inc > 64.0 ? 64.0 : inc;
         }
         o[s] = (float)t_read(main, interp);
-        --main.remain;
+        main.phase += main.inc;
     }
 
     unit->m_segInCycle = segInCycle;

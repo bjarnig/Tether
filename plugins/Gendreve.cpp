@@ -50,7 +50,9 @@ void Gendreve_next(Gendreve* unit, int inNumSamples) {
     CPState ref = unit->m_ref;
 
     for (int s = 0; s < inNumSamples; ++s) {
-        if (main.remain <= 0) {
+        int gm = 0;
+        while (main.phase >= 1.0 && gm++ < 64) {
+            main.phase -= 1.0;
             main.index = (main.index + 1) % knum;
             const int i = main.index;
             main.curAmp = main.nextAmp;
@@ -67,21 +69,21 @@ void Gendreve_next(Gendreve* unit, int inNumSamples) {
             d = t_clamp(d, 0.0, 1.0);
             durMem[i] = d;
 
-            main.seglen = t_seglen(sr, minf, maxf, d, knum);
-            main.remain = main.seglen;
+            main.inc = t_phaseinc(sr, minf, maxf, d, knum);
         }
-        if (ref.remain <= 0) {
+        int gr = 0;
+        while (ref.phase >= 1.0 && gr++ < 64) {
+            ref.phase -= 1.0;
             ref.index = (ref.index + 1) % knum;
             const int i = ref.index;
             ref.curAmp = ref.nextAmp;
             ref.nextAmp = t_template(templateType, (i + 0.5) / knum, skew);
-            ref.seglen = t_seglen(sr, minf, maxf, centerDur, knum);
-            ref.remain = ref.seglen;
+            ref.inc = t_phaseinc(sr, minf, maxf, centerDur, knum);
         }
         o0[s] = (float)t_read(main, interp);
         o1[s] = (float)t_read(ref, interp);
-        --main.remain;
-        --ref.remain;
+        main.phase += main.inc;
+        ref.phase += ref.inc;
     }
 
     unit->m_main = main;

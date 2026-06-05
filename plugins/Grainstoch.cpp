@@ -6,7 +6,7 @@ static InterfaceTable* ft;
 struct Grainstoch : public Unit {
     int m_knum;
     double* m_ampMem;
-    long m_periodRemain;   // samples until the next emission
+    double m_emitAcc;      // fractional countdown to the next emission
     long m_grainLen;       // samples in the current pulsaret
     long m_grainPos;       // position within the pulsaret; <0 = in the silent tail
     double m_sr;
@@ -36,12 +36,12 @@ void Grainstoch_next(Grainstoch* unit, int inNumSamples) {
     const int knum = unit->m_knum;
     const double sr = unit->m_sr;
     double* ampMem = unit->m_ampMem;
-    long periodRemain = unit->m_periodRemain;
+    double emitAcc = unit->m_emitAcc;
     long grainLen = unit->m_grainLen;
     long grainPos = unit->m_grainPos;
 
     for (int s = 0; s < inNumSamples; ++s) {
-        if (periodRemain <= 0) {
+        if (emitAcc <= 0.0) {
             // walk the whole pulsaret; ampStep/ampJump set grain-to-grain decorrelation
             for (int k = 0; k < knum; ++k) {
                 const double r = t_distribution(ampDist, (float)ampDistP, rgen.frand());
@@ -50,13 +50,13 @@ void Grainstoch_next(Grainstoch* unit, int inNumSamples) {
             }
             double pmul = 1.0 + jitter * (rgen.frand() * 2.0 - 1.0) * 0.9;
             if (pmul < 0.1) pmul = 0.1;
-            double period = (sr / pitch) * pmul;
+            double period = (sr / pitch) * pmul; // fractional -> exact emission rate
             if (period < 1.0) period = 1.0;
             if (period > sr * 4.0) period = sr * 4.0;
             grainLen = (long)(duty * period);
             if (grainLen < 1) grainLen = 1;
             grainPos = 0;
-            periodRemain = (long)period;
+            emitAcc += period; // carry the fractional remainder
         }
 
         double outv = 0.0;
@@ -74,10 +74,10 @@ void Grainstoch_next(Grainstoch* unit, int inNumSamples) {
             grainPos = -1;
         }
         o[s] = (float)outv;
-        --periodRemain;
+        emitAcc -= 1.0;
     }
 
-    unit->m_periodRemain = periodRemain;
+    unit->m_emitAcc = emitAcc;
     unit->m_grainLen = grainLen;
     unit->m_grainPos = grainPos;
 }
@@ -99,7 +99,7 @@ void Grainstoch_Ctor(Grainstoch* unit) {
     for (int i = 0; i < n; ++i)
         unit->m_ampMem[i] = std::sin(2.0 * T_PI * (i + 0.5) / n);
 
-    unit->m_periodRemain = 0;
+    unit->m_emitAcc = 0.0;
     unit->m_grainLen = 1;
     unit->m_grainPos = -1;
 

@@ -43,7 +43,9 @@ void Varperiod_next(Varperiod* unit, int inNumSamples) {
     CPState main = unit->m_main;
 
     for (int s = 0; s < inNumSamples; ++s) {
-        if (main.remain <= 0) {
+        int g = 0;
+        while (main.phase >= 1.0 && g++ < 64) {
+            main.phase -= 1.0;
             main.index = (main.index + 1) % knum;
             const int i = main.index;
             main.curAmp = main.nextAmp;
@@ -57,11 +59,10 @@ void Varperiod_next(Varperiod* unit, int inNumSamples) {
             d = t_clamp(d, 0.0, 1.0);
             durMem[i] = d;
 
-            main.seglen = t_seglen(sr, minf, maxf, d, knum);
-            main.remain = main.seglen;
+            main.inc = t_phaseinc(sr, minf, maxf, d, knum);
         }
         o[s] = (float)t_read(main, interp);
-        --main.remain;
+        main.phase += main.inc;
     }
 
     unit->m_main = main;

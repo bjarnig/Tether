@@ -35,11 +35,13 @@ void Probstoch_next(Probstoch* unit, int inNumSamples) {
     CPState main = unit->m_main;
 
     // fixed period: knum equal segments -> the fundamental is exactly freq
-    long seglen = (long)(sr / (freq * knum));
-    if (seglen < 1) seglen = 1;
+    double inc = (freq * (double)knum) / sr;
+    if (inc > 64.0) inc = 64.0;
 
     for (int s = 0; s < inNumSamples; ++s) {
-        if (main.remain <= 0) {
+        int g = 0;
+        while (main.phase >= 1.0 && g++ < 64) {
+            main.phase -= 1.0;
             main.index = (main.index + 1) % knum;
             const int i = main.index;
             main.curAmp = main.nextAmp;
@@ -52,11 +54,10 @@ void Probstoch_next(Probstoch* unit, int inNumSamples) {
             }
             main.nextAmp = ampMem[i];
 
-            main.seglen = seglen;
-            main.remain = seglen;
+            main.inc = inc;
         }
         o[s] = (float)t_read(main, interp);
-        --main.remain;
+        main.phase += main.inc;
     }
 
     unit->m_main = main;

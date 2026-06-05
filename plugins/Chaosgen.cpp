@@ -35,7 +35,9 @@ void Chaosgen_next(Chaosgen* unit, int inNumSamples) {
     CPState main = unit->m_main;
 
     for (int s = 0; s < inNumSamples; ++s) {
-        if (main.remain <= 0) {
+        int g = 0;
+        while (main.phase >= 1.0 && g++ < 64) {
+            main.phase -= 1.0;
             main.curAmp = main.nextAmp;
 
             ampChaos = t_logistic(ampChaos, chaos);
@@ -45,11 +47,10 @@ void Chaosgen_next(Chaosgen* unit, int inNumSamples) {
             double a = t_distribution(ampDist, (float)ampDistP, (float)ampChaos);
             main.nextAmp = t_clamp(a, -1.0, 1.0);
 
-            main.seglen = t_seglen(sr, minf, maxf, durChaos, knum);
-            main.remain = main.seglen;
+            main.inc = t_phaseinc(sr, minf, maxf, durChaos, knum);
         }
         o[s] = (float)t_read(main, interp);
-        --main.remain;
+        main.phase += main.inc;
     }
 
     unit->m_ampChaos = ampChaos;
