@@ -1,3 +1,5 @@
+![Tether — waveform traces of the four UGens](images/scope-hero.png)
+
 # Tether
 
 Experimental SuperCollider UGens for non-standard synthesis — oscillators built
