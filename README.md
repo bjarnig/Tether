@@ -2,7 +2,7 @@
 
 # Tether
 
-Experimental SuperCollider UGens for digital synthesis.
+Experimental SuperCollider UGens for digital synthesis. Work-in-progress.
 
 ## UGens
 
