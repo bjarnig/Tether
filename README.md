@@ -8,7 +8,7 @@ Experimental SuperCollider UGens for digital synthesis.
 
 - **Gendreve** : mean-reverting breakpoint walk.
 - **Diststoch** : free breakpoint walk; evolving distributions.
-- **Cyclegen** : a frequency sequence sets the pitch one cycle at a time.
+- **Cyclegen** : a frequency sequence sets pitch per cycle.
 - **Chaosgen** : breakpoint values driven by a logistic map.
 - **Varperiod** : live control-point count for timbral density.
 - **Fracflight** : mean-reverting walk with fractional motion.
