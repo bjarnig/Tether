@@ -16,6 +16,9 @@ Experimental SuperCollider UGens for digital synthesis. Work-in-progress.
 - **Probstoch** : sparse grains on a fixed-pitch waveform.
 - **Limcycle** : generalized relaxation oscillator (Van der Pol / Rayleigh / Duffing) with stochastic forcing.
 - **Oscnet** : coupled-oscillator network with selectable topology and nonlinear feedback.
+- **Ecostoch** : predator-prey (Lotka-Volterra) population synthesis driving FM/AM.
+- **Scangen** : scanned synthesis on a dynamic mass-spring lattice.
+- **Lifestoch** : ALife birth-death breakpoint population.
 
 ## Build
 

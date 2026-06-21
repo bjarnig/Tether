@@ -64,7 +64,7 @@ jobs:
           body: |
             **Tether** — experimental SuperCollider UGens for digital synthesis.
 
-            Prebuilt server plugins: `Gendreve`, `Diststoch`, `Cyclegen`, `Chaosgen`, `Varperiod`, `Fracflight`, `Grainstoch`, `Probstoch`, `Limcycle`, `Oscnet`.
+            Prebuilt server plugins: `Gendreve`, `Diststoch`, `Cyclegen`, `Chaosgen`, `Varperiod`, `Fracflight`, `Grainstoch`, `Probstoch`, `Limcycle`, `Oscnet`, `Ecostoch`, `Scangen`, `Lifestoch`.
 
             ### Compatibility
             Built against SuperCollider **3.14.1** (plugin API **v3**) — loads in SuperCollider **3.12–3.14.x**. *Not* compatible with 3.15/develop builds (API v6). Each archive is platform-specific.

@@ -1,0 +1,56 @@
+class:: Ecostoch
+summary:: Predator-prey population synthesis
+related:: Classes/Limcycle, Classes/Lifestoch, Classes/Oscnet
+categories:: UGens>Generators>Chaotic
+
+description::
+
+A coupled Lotka–Volterra predator-prey system integrated per sample with RK4, used as a
+sound generator: the prey population drives the carrier amplitude (AM) and the predator
+population drives the FM index, so the ecological orbit becomes the modulation envelope.
+An optional demographic-noise term (fluctuations scaling with the square root of the
+population) makes the cycle genuinely stochastic rather than a clean periodic orbit.
+
+The system is time-scaled so the linearized cycle sits at code::rate:: Hz; equilibria are
+code::decay/interaction:: (prey) and code::growth/interaction:: (predator). Three outputs:
+code::[signal, preyCV, predCV]:: — tap the CVs to modulate other UGens.
+
+classmethods::
+
+method:: ar
+argument:: rate
+Frequency of the ecological cycle (Hz), sub-audio to audio. Default 4.
+argument:: growth
+Prey growth rate. Default 1.
+argument:: decay
+Predator death rate. Default 1.
+argument:: interaction
+Predation coupling strength. Default 1.
+argument:: carrierFreq
+Carrier oscillator frequency (Hz). Default 220.
+argument:: fmIndex
+FM depth driven by the predator population. Default 2.
+argument:: noise
+Demographic-noise amount (stochastic population fluctuations). Default 0.
+argument:: oversample
+Integration sub-steps per sample, 1–32. Default 4.
+argument:: mul
+argument:: add
+
+examples::
+code::
+// the ecological cycle as a slow FM/AM envelope
+{ Ecostoch.ar(4, carrierFreq: 220, fmIndex: 3)[0] * 0.3 ! 2 }.play;
+
+// rate up into the audio range -> the orbit itself becomes a tone
+{ Ecostoch.ar(MouseX.kr(2, 200, 1), carrierFreq: 110, fmIndex: 4)[0] * 0.2 ! 2 }.play;
+
+// demographic noise breaks the clean cycle into a living, drifting one
+{ Ecostoch.ar(6, 1, 1, 1, 200, 3, MouseX.kr(0, 0.4))[0] * 0.2 ! 2 }.play;
+
+// interaction strength reshapes the orbit (spikier predation peaks)
+{ Ecostoch.ar(8, 1, 1, MouseX.kr(0.3, 4), 160, 5)[0] * 0.2 ! 2 }.play;
+
+// use the population CVs to modulate other UGens
+{ var e = Ecostoch.ar(3); SinOsc.ar(300 + (e[1] * 200)) * (e[2] * 0.5 + 0.5) * 0.2 ! 2 }.play;
+::

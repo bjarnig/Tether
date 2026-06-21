@@ -1,0 +1,53 @@
+class:: Scangen
+summary:: Scanned synthesis on a dynamic mass-spring lattice
+related:: Classes/Oscnet, Classes/Lifestoch, Classes/Ecostoch
+categories:: UGens>Generators>Chaotic
+
+description::
+
+Scanned synthesis after Verplank/Mathews. A ring of code::size:: masses connected by
+springs evolves as a slow dynamical system (its speed set by code::rate::, decoupled from
+pitch), while a scan pointer reads the displacement profile around the ring at audio rate
+as a continuously-morphing wavetable. A trickle of code::excite:: energy keeps the lattice
+alive; code::damping:: and code::center:: bleed and recentre it; code::nonlin:: adds a
+cubic spring stiffness so large excursions distort and the timbre evolves unpredictably.
+
+This is a persistent dynamical instrument: it holds state and drifts. code::size:: is fixed
+at build time.
+
+classmethods::
+
+method:: ar
+argument:: freq
+Scan frequency (Hz) — the pitch. Default 110.
+argument:: size
+Number of masses in the ring (fixed). Default 64.
+argument:: rate
+Lattice evolution speed, 0–0.5 (decoupled from pitch). Default 0.05.
+argument:: tension
+Spring stiffness between neighbours, 0–0.49. Default 0.2.
+argument:: damping
+Velocity damping, 0–1. Default 0.005.
+argument:: center
+Restoring force toward rest, 0–1. Default 0.001.
+argument:: nonlin
+Cubic (nonlinear) spring stiffness. Default 0.
+argument:: excite
+Continuous random excitation energy. Default 0.01.
+argument:: mul
+argument:: add
+
+examples::
+code::
+// a slowly morphing wavetable tone
+{ Scangen.ar(110, 64, 0.05, 0.2, 0.01) * 0.3 ! 2 }.play;
+
+// evolution speed: from near-static wavetable to churning texture
+{ Scangen.ar(110, 64, MouseX.kr(0.005, 0.4), 0.2, 0.02) * 0.3 ! 2 }.play;
+
+// tension sweeps the lattice's resonant character
+{ Scangen.ar(80, 96, 0.06, MouseX.kr(0.01, 0.48), 0.01) * 0.3 ! 2 }.play;
+
+// nonlinear springs: large swings distort and destabilise the shape
+{ Scangen.ar(90, 64, 0.08, 0.3, 0.005, 0.001, MouseX.kr(0, 4), 0.01) * 0.25 ! 2 }.play;
+::
