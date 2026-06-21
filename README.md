@@ -14,6 +14,8 @@ Experimental SuperCollider UGens for digital synthesis. Work-in-progress.
 - **Fracflight** : mean-reverting walk with fractional motion.
 - **Grainstoch** : an emission pitch carrying walking grains.
 - **Probstoch** : sparse grains on a fixed-pitch waveform.
+- **Limcycle** : generalized relaxation oscillator (Van der Pol / Rayleigh / Duffing) with stochastic forcing.
+- **Oscnet** : coupled-oscillator network with selectable topology and nonlinear feedback.
 
 ## Build
 
