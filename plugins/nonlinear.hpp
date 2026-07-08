@@ -23,31 +23,31 @@ static inline bool t_edge(double cur, double prev, double thresh) {
     return cur > thresh && prev <= thresh;
 }
 
-// One RK4 step of a generalized relaxation oscillator:
-//   x' = v,  v' = mu * damp(x,v) * v - stiff(x) + force
-// shape morphs the damping from position-based (0, Van der Pol: 1-x^2) to
-// velocity-based (1, Rayleigh: 1-(v/w)^2). well morphs the restoring force from a
-// single well (0: w^2 x) to a double well (1: w^2 (x^3 - x), Duffing).
-static inline void t_relax_step(double& x, double& v, double w, double mu,
-                                double shape, double well, double force, double dt) {
-    const double w2 = w * w;
-    const double iw = 1.0 / (w + 1e-9);
-    auto dv = [&](double xx, double vv) {
-        const double vn = vv * iw;
-        const double damp = (1.0 - shape) * (1.0 - xx * xx) + shape * (1.0 - vn * vn);
-        const double stiff = w2 * ((1.0 - well) * xx + well * (xx * xx * xx - xx));
-        return mu * damp * vv - stiff + force;
+// One RK4 step of a generalized relaxation oscillator, in nondimensional time
+// (tau = 2*pi*freq*t) so the natural frequency is 1 and mu / force / z are in
+// natural units rather than scaled by w or w^2:
+//   x' = v,  v' = mu*damp(x,v)*v - stiff(x) - fb*z + force,  z' = fbRate*(x - z)
+// shape morphs the damping from position-based (0: 1-x^2) to velocity-based
+// (1: 1-v^2). well morphs the restoring force from a single well (0: x) to a
+// double well (1: x^3 - x). z is a slow feedback state: fb > 0 makes the flow 3D,
+// the minimum for chaos, since a 2D autonomous flow cannot be chaotic.
+static inline void t_relax_step(double& x, double& v, double& z, double mu, double shape,
+                                double well, double fb, double fbRate, double force, double dt) {
+    auto dv = [&](double xx, double vv, double zz) {
+        const double damp = (1.0 - shape) * (1.0 - xx * xx) + shape * (1.0 - vv * vv);
+        const double stiff = (1.0 - well) * xx + well * (xx * xx * xx - xx);
+        return mu * damp * vv - stiff - fb * zz + force;
     };
-    const double k1x = v;
-    const double k1v = dv(x, v);
-    const double k2x = v + 0.5 * dt * k1v;
-    const double k2v = dv(x + 0.5 * dt * k1x, v + 0.5 * dt * k1v);
-    const double k3x = v + 0.5 * dt * k2v;
-    const double k3v = dv(x + 0.5 * dt * k2x, v + 0.5 * dt * k2v);
-    const double k4x = v + dt * k3v;
-    const double k4v = dv(x + dt * k3x, v + dt * k3v);
+    auto dz = [&](double xx, double zz) { return fbRate * (xx - zz); };
+
+    const double k1x = v,                    k1v = dv(x, v, z),                                     k1z = dz(x, z);
+    const double k2x = v + 0.5 * dt * k1v,   k2v = dv(x + 0.5*dt*k1x, v + 0.5*dt*k1v, z + 0.5*dt*k1z), k2z = dz(x + 0.5*dt*k1x, z + 0.5*dt*k1z);
+    const double k3x = v + 0.5 * dt * k2v,   k3v = dv(x + 0.5*dt*k2x, v + 0.5*dt*k2v, z + 0.5*dt*k2z), k3z = dz(x + 0.5*dt*k2x, z + 0.5*dt*k2z);
+    const double k4x = v + dt * k3v,         k4v = dv(x + dt*k3x, v + dt*k3v, z + dt*k3z),             k4z = dz(x + dt*k3x, z + dt*k3z);
+
     x += (dt / 6.0) * (k1x + 2.0 * k2x + 2.0 * k3x + k4x);
     v += (dt / 6.0) * (k1v + 2.0 * k2v + 2.0 * k3v + k4v);
+    z += (dt / 6.0) * (k1z + 2.0 * k2z + 2.0 * k3z + k4z);
 }
 
 // TPT (Zavalishin) state-variable filter. Call set() to retune, then process()
