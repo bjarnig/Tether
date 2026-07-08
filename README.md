@@ -6,17 +6,19 @@ Experimental SuperCollider UGens for digital synthesis. Work-in-progress.
 
 ## UGens
 
-- **Gendreve** : mean-reverting breakpoint walk.
-- **Diststoch** : free breakpoint walk; evolving distributions.
+- **Limcycle** : relaxation with stochastic forcing.
+
+- **Gendreve** : mean-reverting chaotic breakpoint walk, tethered to a template.
+- **Diststoch** : free chaotic breakpoint walk with asymmetric barriers.
 - **Cyclegen** : a frequency sequence sets pitch per cycle.
 - **Chaosgen** : breakpoint values driven by a logistic map.
 - **Varperiod** : live control-point count for timbral density.
 - **Fracflight** : mean-reverting walk with fractional motion.
 - **Grainstoch** : an emission pitch carrying walking grains.
 - **Probstoch** : sparse grains on a fixed-pitch waveform.
-- **Limcycle** : generalized relaxation oscillator (Van der Pol / Rayleigh / Duffing) with stochastic forcing.
+
 - **Oscnet** : coupled-oscillator network with selectable topology and nonlinear feedback.
-- **Ecostoch** : predator-prey (Lotka-Volterra) population synthesis driving FM/AM.
+- **Ecostoch** : predator-prey population synthesis.
 - **Scangen** : scanned synthesis on a dynamic mass-spring lattice.
 - **Lifestoch** : ALife birth-death breakpoint population.
 

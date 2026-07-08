@@ -40,6 +40,5 @@ argument:: add
 
 examples::
 code::
-// sweep the control-point count at a steady pitch
 { Varperiod.ar(150, 150, 40, MouseX.kr(2, 40).round, ampStep: 0.2, durStep: 0.0) * 0.2 ! 2 }.play;
 ::

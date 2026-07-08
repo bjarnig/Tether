@@ -7,7 +7,7 @@ description::
 
 A breakpoint oscillator at a fixed period, so the pitch (code::freq::) never
 drifts. Each control point is resampled with probability code::prob:: per cycle,
-otherwise it holds — so most of the waveform is stable (pitch) while a tunable
+otherwise it holds, so most of the waveform is stable (pitch) while a tunable
 density of points speckle it with grains (noise). code::prob:: is a grain-density
 dial, distinct from grain magnitude. code::knum:: is fixed at build time.
 
@@ -39,6 +39,5 @@ argument:: add
 
 examples::
 code::
-// steady pitch; sweep grain density (X) from clean tone to noise
 { Probstoch.ar(200, 16, prob: MouseX.kr(0, 1)) * 0.2 ! 2 }.play;
 ::

@@ -9,8 +9,8 @@ The breakpoint oscillator reimagined as a living population. Each waveform break
 an agent with an energy level; every cycle it gains energy below the carrying capacity
 (code::growth:: vs code::crowding:: × population), reproduces when well-fed (splitting,
 the child inheriting a mutated amplitude), and dies when starved. Birth and death replace
-the random walk, so the number of breakpoints — and thus the waveform's timbral
-complexity — self-grows and self-prunes around an equilibrium population.
+the random walk, so the number of breakpoints, and thus the waveform's timbral
+complexity, self-grows and self-prunes around an equilibrium population.
 
 The fundamental stays at code::freq:: regardless of population (the segment subdivision
 adapts, as in link::Classes/Varperiod::), so the population dynamics are heard as breathing
@@ -38,15 +38,11 @@ argument:: add
 
 examples::
 code::
-// a tone whose timbre breathes as the population grows and prunes
 { Lifestoch.ar(110) * 0.3 ! 2 }.play;
 
-// carrying capacity (growth/crowding) sets how dense the waveform gets
 { Lifestoch.ar(110, 96, MouseX.kr(0.05, 1.5), 0.02) * 0.2 ! 2 }.play;
 
-// crowding pressure: low = packed and bright, high = sparse and lean
 { Lifestoch.ar(90, 128, 0.6, MouseX.kr(0.005, 0.1)) * 0.25 ! 2 }.play;
 
-// mutation: how far offspring amplitudes wander from their parent
 { Lifestoch.ar(120, 64, 0.3, 0.01, 1.0, MouseX.kr(0, 0.6)) * 0.25 ! 2 }.play;
 ::
