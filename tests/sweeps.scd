@@ -6,11 +6,11 @@
 
 s.boot;
 
-// Gendreve — X: ampStiffness (noisy <-> pitched), Y: durStiffness
-{ Gendreve.ar(100, 400, 12, MouseX.kr(0, 1), MouseY.kr(0, 1), 0.3, 0.3)[0] * 0.2 ! 2 }.play;
+// Gendreve — X: ampStiffness (chaotic <-> template), Y: durStiffness
+{ Gendreve.ar(100, 400, 12, MouseX.kr(0, 1), MouseY.kr(0, 1), 2.0, 2.0)[0] * 0.2 ! 2 }.play;
 
-// Diststoch — X: ampJump (walk <-> memoryless), Y: barrierHi (0..3)
-{ Diststoch.ar(120, 480, 14, ampStep: 0.25, ampJump: MouseX.kr(0, 1), barrierHi: MouseY.kr(0, 3).round) * 0.2 ! 2 }.play;
+// Diststoch — X: ampKick (quasi-periodic <-> chaotic), Y: barrierHi (0..3)
+{ Diststoch.ar(120, 480, 14, ampKick: MouseX.kr(0.2, 6), durKick: 0, barrierHi: MouseY.kr(0, 3).round) * 0.2 ! 2 }.play;
 
 // Cyclegen — X: ampJump, sequenced melody
 { Cyclegen.ar(12, ampStep: 0.1, ampJump: MouseX.kr(0, 1), freqs: [110, 165, 220, 330, 277]) * 0.2 ! 2 }.play;
