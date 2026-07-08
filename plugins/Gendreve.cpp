@@ -3,19 +3,24 @@
 
 static InterfaceTable* ft;
 
+// Light mean reversion on the momentum: bounds it without opening the periodic
+// windows that stronger dissipation carves out of the chaotic region.
+static const double GENDREVE_GAMMA = 0.9999;
+
 struct Gendreve : public Unit {
     int m_knum;
-    double* m_ampMem;
-    double* m_durMem;
+    double* m_ampP;
+    double* m_ampTh;
+    double* m_durP;
+    double* m_durTh;
     CPState m_main;
     CPState m_ref;
     double m_sr;
 };
 
 enum {
-    MinFreq, MaxFreq, KNum, AmpStiff, DurStiff, AmpNoise, DurNoise,
-    AmpDist, AmpDistP, DurDist, DurDistP, TemplateType, TemplateSkew,
-    CenterDur, Interp
+    MinFreq, MaxFreq, KNum, AmpStiff, DurStiff, AmpKick, DurKick,
+    TemplateType, TemplateSkew, CenterDur, Interp
 };
 
 void Gendreve_clear(Gendreve* unit, int inNumSamples) {
@@ -30,22 +35,19 @@ void Gendreve_next(Gendreve* unit, int inNumSamples) {
     const double maxf = ZIN0(MaxFreq);
     const double ampStiff = t_clamp(ZIN0(AmpStiff), 0.0, 1.0);
     const double durStiff = t_clamp(ZIN0(DurStiff), 0.0, 1.0);
-    const double ampNoise = ZIN0(AmpNoise);
-    const double durNoise = ZIN0(DurNoise);
-    const int ampDist = (int)ZIN0(AmpDist);
-    const double ampDistP = ZIN0(AmpDistP);
-    const int durDist = (int)ZIN0(DurDist);
-    const double durDistP = ZIN0(DurDistP);
+    const double ampKick = ZIN0(AmpKick);
+    const double durKick = ZIN0(DurKick);
     const int templateType = (int)ZIN0(TemplateType);
     const double skew = ZIN0(TemplateSkew);
     const double centerDur = t_clamp(ZIN0(CenterDur), 0.0, 1.0);
     const int interp = (int)ZIN0(Interp);
 
-    RGen& rgen = *unit->mParent->mRGen;
     const int knum = unit->m_knum;
     const double sr = unit->m_sr;
-    double* ampMem = unit->m_ampMem;
-    double* durMem = unit->m_durMem;
+    double* ampP = unit->m_ampP;
+    double* ampTh = unit->m_ampTh;
+    double* durP = unit->m_durP;
+    double* durTh = unit->m_durTh;
     CPState main = unit->m_main;
     CPState ref = unit->m_ref;
 
@@ -58,16 +60,16 @@ void Gendreve_next(Gendreve* unit, int inNumSamples) {
             main.curAmp = main.nextAmp;
 
             const double tAmp = t_template(templateType, (i + 0.5) / knum, skew);
-            double a = ampMem[i];
-            a += -ampStiff * (a - tAmp) + ampNoise * t_distribution(ampDist, ampDistP, rgen.frand());
-            a = t_mirror(a, -1.0, 1.0);
-            ampMem[i] = a;
-            main.nextAmp = a;
 
-            double d = durMem[i];
-            d += -durStiff * (d - centerDur) + durNoise * t_distribution(durDist, durDistP, rgen.frand());
-            d = t_clamp(d, 0.0, 1.0);
-            durMem[i] = d;
+            t_stdmap(ampP[i], ampTh[i], ampKick * std::sin(ampTh[i]), GENDREVE_GAMMA, 1.0);
+            // The tether scales the deviation instead of contracting the map state:
+            // stiffness 1 lands exactly on the template, and the chaos is untouched.
+            const double dev = t_mirror(ampP[i], -1.0, 1.0);
+            main.nextAmp = t_mirror(tAmp + (1.0 - ampStiff) * dev, -1.0, 1.0);
+
+            t_stdmap(durP[i], durTh[i], durKick * std::sin(durTh[i]), GENDREVE_GAMMA, 1.0);
+            const double ddev = t_mirror(durP[i], -1.0, 1.0);
+            const double d = t_mirror(centerDur + (1.0 - durStiff) * 0.5 * ddev, 0.0, 1.0);
 
             main.inc = t_phaseinc(sr, minf, maxf, d, knum);
         }
@@ -98,20 +100,22 @@ void Gendreve_Ctor(Gendreve* unit) {
     if (n > 1024) n = 1024;
     unit->m_knum = n;
 
-    unit->m_ampMem = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
-    unit->m_durMem = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
-    if (!unit->m_ampMem || !unit->m_durMem) {
+    unit->m_ampP = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
+    unit->m_ampTh = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
+    unit->m_durP = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
+    unit->m_durTh = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
+    if (!unit->m_ampP || !unit->m_ampTh || !unit->m_durP || !unit->m_durTh) {
         SETCALC(Gendreve_clear);
         ClearUnitOutputs(unit, 1);
         return;
     }
 
-    const int templateType = (int)ZIN0(TemplateType);
-    const double skew = ZIN0(TemplateSkew);
-    const double centerDur = t_clamp(ZIN0(CenterDur), 0.0, 1.0);
+    // Golden-ratio angles: a low-discrepancy spread so the rotors start decorrelated.
     for (int i = 0; i < n; ++i) {
-        unit->m_ampMem[i] = t_template(templateType, (i + 0.5) / n, skew);
-        unit->m_durMem[i] = centerDur;
+        unit->m_ampP[i] = 0.0;
+        unit->m_ampTh[i] = 2.0 * T_PI * std::fmod((i + 1) * T_PHI, 1.0);
+        unit->m_durP[i] = 0.0;
+        unit->m_durTh[i] = 2.0 * T_PI * std::fmod((i + 1) * T_PHI * 0.5 + 0.37, 1.0);
     }
     t_cp_reset(unit->m_main);
     t_cp_reset(unit->m_ref);
@@ -121,8 +125,10 @@ void Gendreve_Ctor(Gendreve* unit) {
 }
 
 void Gendreve_Dtor(Gendreve* unit) {
-    if (unit->m_ampMem) RTFree(unit->mWorld, unit->m_ampMem);
-    if (unit->m_durMem) RTFree(unit->mWorld, unit->m_durMem);
+    if (unit->m_ampP) RTFree(unit->mWorld, unit->m_ampP);
+    if (unit->m_ampTh) RTFree(unit->mWorld, unit->m_ampTh);
+    if (unit->m_durP) RTFree(unit->mWorld, unit->m_durP);
+    if (unit->m_durTh) RTFree(unit->mWorld, unit->m_durTh);
 }
 
 PluginLoad(Gendreve) {

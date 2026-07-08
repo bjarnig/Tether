@@ -3,6 +3,7 @@
 #include <cmath>
 
 static const double T_PI = 3.14159265358979323846;
+static const double T_PHI = 1.61803398874989484820;
 
 // Probability distributions for the stochastic step. Maps a uniform deviate
 // f in [0,1) to a shaped deviate in ~[-1,1], shaped by a in [0,1].
@@ -120,6 +121,17 @@ static inline double t_stable(double alpha, double r1, double r2) {
         x = t1 * t2;
     }
     return t_clamp(x, -30.0, 30.0);
+}
+
+// One iteration of the kicked-rotor (standard) map. kick is this step's impulse:
+// kick = K*sin(th) is Chirikov, chaotic above K ~ 0.97. gamma < 1 mean-reverts p
+// toward 0, bounding it near |kick|/(1-gamma). thScale sets how far p turns the
+// rotor; an irrational scale keeps the fold off low-order resonances (period windows).
+static inline void t_stdmap(double& p, double& th, double kick, double gamma, double thScale) {
+    p = t_clamp(gamma * p + kick, -1e6, 1e6);
+    th += p * thScale;
+    const double twopi = 2.0 * T_PI;
+    th -= twopi * std::floor(th / twopi);
 }
 
 // Per-traversal state. phase is the position within the current segment [0,1);
