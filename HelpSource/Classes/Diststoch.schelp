@@ -1,14 +1,19 @@
 class:: Diststoch
-summary:: Free stochastic breakpoint oscillator with asymmetric barriers
-related:: Classes/Gendreve
+summary:: Free chaotic breakpoint oscillator with asymmetric barriers
+related:: Classes/Gendreve, Classes/Chaosgen
 categories:: UGens>Generators>Stochastic
 
 description::
 
-A breakpoint oscillator with a free random walk. The distribution parameters can
-slowly drift, the amplitude bounds and their barrier behaviours can be asymmetric
-(adding DC and even harmonics), and the code::jump:: controls turn the correlated
-walk into independent, memoryless leaps. code::knum:: is fixed at build time.
+A breakpoint oscillator whose control points follow a free chaotic walk. Each point
+carries a kicked-rotor map: the kick drives an unbounded momentum, and the amplitude
+bounds and their barrier behaviours fold it back. The bounds can be asymmetric, adding
+DC and even harmonics.
+
+code::ampKick:: is the order-to-chaos dial. Small values leave the walk quasi-periodic;
+above roughly 1 it becomes chaotic, with periodic windows scattered through the range.
+The distribution reshapes the kick: code::ampDist = 0:: (linear) gives the plain kicked
+rotor, the others bend it. code::knum:: is fixed at build time.
 
 classmethods::
 
@@ -23,22 +28,14 @@ argument:: ampDist
 Distribution: 0 linear, 1 cauchy, 2 logistic, 3 hyperbcos, 4 arcsine, 5 exponential, 6 sinus. Default 0.
 argument:: ampDistParam
 0–1. Default 0.5.
-argument:: ampDistParamWalk
-Drift on code::ampDistParam:: (0 = static). Default 0.
 argument:: durDist
 Duration distribution (same codes). Default 0.
 argument:: durDistParam
 0–1. Default 0.5.
-argument:: durDistParamWalk
-Drift on code::durDistParam::. Default 0.
-argument:: ampStep
-Amplitude walk step size. Default 0.1.
-argument:: durStep
-Duration walk step size. Default 0.05.
-argument:: ampJump
-Walk → memoryless redraw, 0–1. Default 0.
-argument:: durJump
-Same for duration, 0–1. Default 0.
+argument:: ampKick
+Amplitude rotor kick. Chaotic above ~1. Default 2.0.
+argument:: durKick
+Duration rotor kick. 0 holds the pitch steady. Default 2.0.
 argument:: ampLo
 Lower amplitude bound. Default -1.0.
 argument:: ampHi
@@ -54,6 +51,19 @@ argument:: add
 
 examples::
 code::
-// asymmetric barriers: mirror low, clip high
-{ Diststoch.ar(80, 200, 14, ampDist: 1, ampStep: 0.25, ampLo: -0.6, barrierHi: 2) * 0.2 ! 2 }.play;
+{ Diststoch.ar(150, 150, 14, ampKick: MouseX.kr(0.2, 6), durKick: 0) * 0.2 ! 2 }.play;
+
+{ Diststoch.ar(80, 200, 14, ampDist: 1, ampKick: 2.5, ampLo: -0.6, barrierHi: 2) * 0.2 ! 2 }.play;
+
+{ Diststoch.ar(80, 400, 14, ampKick: 2.5, durKick: 2.0) * 0.2 ! 2 }.play;
+
+{ Diststoch.ar(150, 150, 14, ampKick: 2.5, durKick: 0, ampLo: MouseX.kr(-1, 0), barrierHi: 2) * 0.2 ! 2 }.play;
+
+{ Diststoch.ar(120, 480, 20, ampDist: 4, ampDistParam: MouseY.kr(0.05, 1), ampKick: MouseX.kr(0.5, 5)) * 0.2 ! 2 }.play;
+
+{ Diststoch.ar(200, 200, 10, ampKick: 3.0, durKick: 0, barrierLo: 3, barrierHi: 3, interp: 0) * 0.2 ! 2 }.play;
+
+{ Diststoch.ar(40, 40, 32, ampDist: 2, ampDistParam: 0.9, ampKick: 1.6, durKick: 0, interp: 2) * 0.25 ! 2 }.play;
+
+{ Diststoch.ar(90, 360, 14, ampKick: LFNoise0.kr(2).range(0.3, 5), durKick: 1.2, ampLo: -0.5, barrierHi: 1) * 0.2 ! 2 }.play;
 ::

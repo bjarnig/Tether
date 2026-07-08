@@ -12,7 +12,7 @@ network itself:
 
 list::
 ## code::voices:: sets the number of oscillators, 1–64 (fixed at build time).
-## code::topo:: selects the coupling graph — 0 pairs (0↔1, 2↔3…), 1 ring (nearest
+## code::topo:: selects the coupling graph: 0 pairs (0↔1, 2↔3…), 1 ring (nearest
 neighbours), 2 all-to-all (mean field). The topology, not a preset, defines the organism.
 ## code::couple:: is the cross-modulation strength; code::feedback:: routes the
 distorted sum back into every voice's pitch, so past a threshold the drone self-collapses.
@@ -54,18 +54,13 @@ argument:: add
 
 examples::
 code::
-// topology: same voices, different coupling graph — pairs vs ring vs mean field.
 { Oscnet.ar(110, 6, 1.02, MouseX.kr(0, 2).round(1), 0.6, 0.3, 0.05, 0, 2, 0.3)[0] * 0.15 ! 2 }.play;
 
-// self-collapsing feedback: a stable drone destabilises into chaos as feedback rises.
 { Oscnet.ar(110, 4, 1.01, 0, 0.3, 0.3, 0.05, 0, 2, MouseX.kr(0, 0.95))[0] * 0.2 ! 2 }.play;
 
-// coupling strength: cross-mod sidebands bloom from near-unison into a metallic cloud.
 { Oscnet.ar(110, 8, 1.01, 2, MouseX.kr(0, 1.5))[0] * 0.15 ! 2 }.play;
 
-// wavefold: morph the nonlinearity from tanh to triangle folding for a harsher collapse.
 { Oscnet.ar(140, 4, 1.02, 0, 0.5, 0.2, 0.05, MouseX.kr(0, 1), 3, 0.3)[0] * 0.15 ! 2 }.play;
 
-// organic drift: stochastic detune makes the whole bank slowly wander out of tune.
 { Oscnet.ar(90, 6, 1.03, 1, 0.5, 0.2, 0.08, 0, 2, 0.4, MouseX.kr(0, 1))[0] * 0.15 ! 2 }.play;
 ::

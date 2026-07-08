@@ -5,19 +5,18 @@ static InterfaceTable* ft;
 
 struct Diststoch : public Unit {
     int m_knum;
-    double* m_ampMem;
-    double* m_durMem;
-    double m_ampPWalk;
-    double m_durPWalk;
+    double* m_ampP;
+    double* m_ampTh;
+    double* m_durP;
+    double* m_durTh;
     CPState m_main;
     double m_sr;
 };
 
 enum {
     MinFreq, MaxFreq, KNum,
-    AmpDist, AmpDistP, AmpDistPWalk,
-    DurDist, DurDistP, DurDistPWalk,
-    AmpStep, DurStep, AmpJump, DurJump,
+    AmpDist, AmpDistP, DurDist, DurDistP,
+    AmpKick, DurKick,
     AmpLo, AmpHi, BarrierLo, BarrierHi,
     Interp
 };
@@ -33,14 +32,10 @@ void Diststoch_next(Diststoch* unit, int inNumSamples) {
     const double maxf = ZIN0(MaxFreq);
     const int ampDist = (int)ZIN0(AmpDist);
     const double ampDistP = ZIN0(AmpDistP);
-    const double ampDistPWalk = ZIN0(AmpDistPWalk);
     const int durDist = (int)ZIN0(DurDist);
     const double durDistP = ZIN0(DurDistP);
-    const double durDistPWalk = ZIN0(DurDistPWalk);
-    const double ampStep = ZIN0(AmpStep);
-    const double durStep = ZIN0(DurStep);
-    const double ampJump = t_clamp(ZIN0(AmpJump), 0.0, 1.0);
-    const double durJump = t_clamp(ZIN0(DurJump), 0.0, 1.0);
+    const double ampKick = ZIN0(AmpKick);
+    const double durKick = ZIN0(DurKick);
     const double ampLo = ZIN0(AmpLo);
     const double ampHi = ZIN0(AmpHi);
     const int barrierLo = (int)ZIN0(BarrierLo);
@@ -50,11 +45,17 @@ void Diststoch_next(Diststoch* unit, int inNumSamples) {
     RGen& rgen = *unit->mParent->mRGen;
     const int knum = unit->m_knum;
     const double sr = unit->m_sr;
-    double* ampMem = unit->m_ampMem;
-    double* durMem = unit->m_durMem;
-    double ampPWalk = unit->m_ampPWalk;
-    double durPWalk = unit->m_durPWalk;
+    double* ampP = unit->m_ampP;
+    double* ampTh = unit->m_ampTh;
+    double* durP = unit->m_durP;
+    double* durTh = unit->m_durTh;
     CPState main = unit->m_main;
+
+    // Irrational angle scale: keeps the barrier fold off the low-order resonances
+    // that otherwise open period-2 windows at ordinary kick values.
+    const double ampRange = ampHi - ampLo;
+    const double ampScale = (ampRange > 1e-9) ? (2.0 * T_PI * T_PHI / ampRange) : 0.0;
+    const double durScale = 2.0 * T_PI * T_PHI;
 
     for (int s = 0; s < inNumSamples; ++s) {
         int g = 0;
@@ -64,36 +65,25 @@ void Diststoch_next(Diststoch* unit, int inNumSamples) {
             const int i = main.index;
             main.curAmp = main.nextAmp;
 
-            ampPWalk = t_mirror(ampPWalk + ampDistPWalk * (rgen.frand() * 2.0 - 1.0), -1.0, 1.0);
-            durPWalk = t_mirror(durPWalk + durDistPWalk * (rgen.frand() * 2.0 - 1.0), -1.0, 1.0);
-            const double effAmpP = t_mirror(ampDistP + ampPWalk, 0.0, 1.0);
-            const double effDurP = t_mirror(durDistP + durPWalk, 0.0, 1.0);
+            // dist 0 (linear) makes the kick exactly ampKick*sin(theta): the
+            // Chirikov map, chaotic above ~0.97. Other laws reshape the kick.
+            const double au = 0.5 + 0.5 * std::sin(ampTh[i]);
+            const double akick = ampKick * t_distribution(ampDist, (float)ampDistP, (float)au);
+            t_stdmap(ampP[i], ampTh[i], akick, 1.0, ampScale);
+            ampP[i] = t_barrier(ampP[i], ampLo, ampHi, barrierLo, barrierHi, rgen.frand());
+            main.nextAmp = ampP[i];
 
-            // ampJump blends the incremental walk toward an absolute redraw
-            // across [ampLo,ampHi]: 0 = correlated walk, 1 = memoryless jumps.
-            const double r = t_distribution(ampDist, (float)effAmpP, rgen.frand());
-            const double walked = ampMem[i] + ampStep * r;
-            const double absolute = 0.5 * (ampLo + ampHi) + 0.5 * (ampHi - ampLo) * r;
-            double a = walked + ampJump * (absolute - walked);
-            a = t_barrier(a, ampLo, ampHi, barrierLo, barrierHi, rgen.frand());
-            ampMem[i] = a;
-            main.nextAmp = a;
+            const double du = 0.5 + 0.5 * std::sin(durTh[i]);
+            const double dkick = durKick * t_distribution(durDist, (float)durDistP, (float)du);
+            t_stdmap(durP[i], durTh[i], dkick, 1.0, durScale);
+            durP[i] = t_mirror(durP[i], 0.0, 1.0);
 
-            const double rd = t_distribution(durDist, (float)effDurP, rgen.frand());
-            const double dwalked = durMem[i] + durStep * rd;
-            const double dabsolute = 0.5 + 0.5 * rd; // spans [0,1] when rd in [-1,1]
-            double d = dwalked + durJump * (dabsolute - dwalked);
-            d = t_clamp(d, 0.0, 1.0);
-            durMem[i] = d;
-
-            main.inc = t_phaseinc(sr, minf, maxf, d, knum);
+            main.inc = t_phaseinc(sr, minf, maxf, durP[i], knum);
         }
         o[s] = (float)t_read(main, interp);
         main.phase += main.inc;
     }
 
-    unit->m_ampPWalk = ampPWalk;
-    unit->m_durPWalk = durPWalk;
     unit->m_main = main;
 }
 
@@ -105,21 +95,24 @@ void Diststoch_Ctor(Diststoch* unit) {
     if (n > 1024) n = 1024;
     unit->m_knum = n;
 
-    unit->m_ampMem = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
-    unit->m_durMem = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
-    if (!unit->m_ampMem || !unit->m_durMem) {
+    unit->m_ampP = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
+    unit->m_ampTh = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
+    unit->m_durP = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
+    unit->m_durTh = (double*)RTAlloc(unit->mWorld, n * sizeof(double));
+    if (!unit->m_ampP || !unit->m_ampTh || !unit->m_durP || !unit->m_durTh) {
         SETCALC(Diststoch_clear);
         ClearUnitOutputs(unit, 1);
         return;
     }
 
     const double lo = ZIN0(AmpLo), hi = ZIN0(AmpHi);
+    // Golden-ratio angles: a low-discrepancy spread so the rotors start decorrelated.
     for (int i = 0; i < n; ++i) {
-        unit->m_ampMem[i] = t_clamp(0.5 * std::sin(2.0 * T_PI * (i + 0.5) / n), lo, hi);
-        unit->m_durMem[i] = 0.5;
+        unit->m_ampP[i] = t_clamp(0.5 * std::sin(2.0 * T_PI * (i + 0.5) / n), lo, hi);
+        unit->m_ampTh[i] = 2.0 * T_PI * std::fmod((i + 1) * T_PHI, 1.0);
+        unit->m_durP[i] = 0.5;
+        unit->m_durTh[i] = 2.0 * T_PI * std::fmod((i + 1) * T_PHI * 0.5 + 0.37, 1.0);
     }
-    unit->m_ampPWalk = 0.0;
-    unit->m_durPWalk = 0.0;
     t_cp_reset(unit->m_main);
 
     SETCALC(Diststoch_next);
@@ -127,8 +120,10 @@ void Diststoch_Ctor(Diststoch* unit) {
 }
 
 void Diststoch_Dtor(Diststoch* unit) {
-    if (unit->m_ampMem) RTFree(unit->mWorld, unit->m_ampMem);
-    if (unit->m_durMem) RTFree(unit->mWorld, unit->m_durMem);
+    if (unit->m_ampP) RTFree(unit->mWorld, unit->m_ampP);
+    if (unit->m_ampTh) RTFree(unit->mWorld, unit->m_ampTh);
+    if (unit->m_durP) RTFree(unit->mWorld, unit->m_durP);
+    if (unit->m_durTh) RTFree(unit->mWorld, unit->m_durTh);
 }
 
 PluginLoad(Diststoch) {

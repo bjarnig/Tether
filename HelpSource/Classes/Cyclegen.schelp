@@ -45,4 +45,22 @@ argument:: add
 examples::
 code::
 { Cyclegen.ar(12, ampStep: 0.08, stiffness: 0.5, templateType: 1, seqMode: 2, freqs: [110, 147, 165, 220]) * 0.2 ! 2 }.play;
+
+{ Cyclegen.ar(120, ampStep: 0.38, stiffness: 0.05, templateType: 1, seqMode: 2, freqs: [110, 147, 165, 220] * LFNoise0.kr(0.1).range(0.5, 1.5)) * 0.2 ! 2 }.play;
+
+{ Cyclegen.ar(16, ampStep: MouseX.kr(0, 0.5), stiffness: MouseY.kr(0, 1), templateType: 2, freqs: [220, 293, 330, 440]) * 0.2 ! 2 }.play;
+
+{ Cyclegen.ar(64, ampStep: 0.25, ampJump: MouseX.kr(0, 1), stiffness: 0.1, templateType: 3, templateSkew: MouseY.kr(0.05, 0.95), freqs: [82, 110, 123, 165]) * 0.2 ! 2 }.play;
+
+{ Cyclegen.ar(24, ampStep: 0.15, stiffness: 0.3, templateType: 1, repeats: 3, seqMode: 3, freqMul: MouseX.kr(0.5, 2), freqs: [110, 138, 165, 207, 247]) * 0.2 ! 2 }.play;
+
+{ Cyclegen.ar(8, ampStep: 0.4, ampDist: 1, ampDistParam: 0.2, stiffness: 0.02, interp: 0, freqs: [55, 82, 110, 165, 220, 330]) * 0.2 ! 2 }.play;
+
+{ Cyclegen.ar(200, ampStep: 0.45, stiffness: 0.03, templateType: 1, seqMode: 2, interp: 2, freqs: [65, 87, 98, 131] * LFNoise0.kr(0.25).range(0.75, 2.0)) * 0.2 ! 2 }.play;
+
+{ Cyclegen.ar(12, ampStep: 0.1, stiffness: 0.6, templateType: 0, repeats: 2, seqMode: 2, freqs: (Scale.minorPentatonic.degrees + 60).midicps) * 0.2 ! 2 }.play;
+
+{ Splay.ar([1, 1.5, 2.02].collect { |m| Cyclegen.ar(32, ampStep: 0.2, stiffness: 0.15, templateType: 1, freqMul: m, seqMode: 2, freqs: [110, 147, 165, 220]) }) * 0.2 }.play;
+
+{ Cyclegen.ar(48, ampStep: 0.3, stiffness: SinOsc.kr(0.05).range(0, 0.8), templateType: 2, seqMode: 2, freqs: [147, 165, 196, 220, 262]) * 0.2 ! 2 }.play;
 ::

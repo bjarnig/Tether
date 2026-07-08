@@ -1,27 +1,32 @@
 class:: Limcycle
-summary:: Generalized self-limiting relaxation oscillator
+summary:: Relaxation oscillator with stochastic forcing
 related:: Classes/Oscnet, Classes/Fracflight
 categories:: UGens>Generators>Chaotic
 
 description::
 
-A self-oscillating nonlinear ODE integrated per sample with RK4. It grows out of the
-Van der Pol limit cycle but adds two morphs the textbook oscillator lacks, plus a
-stochastic forcing path that ties it to Tether's stochastic family:
+A self-oscillating nonlinear ODE integrated per sample with RK4, in nondimensional
+time, so code::mu::, code::force:: and code::noise:: are in natural units while
+code::freq:: sets the natural frequency.
 
 list::
-## code::shape:: morphs the nonlinear damping from position-based (0, Van der Pol —
-sine to relaxation buzz) to velocity-based (1, Rayleigh — a different asymmetry).
+## code::shape:: morphs the nonlinear damping from position-based (0, sine to
+relaxation buzz) to velocity-based (1, a different asymmetry).
 ## code::well:: morphs the restoring force from a single well (0) to a double well
-(1, Duffing) where the rest point at 0 becomes unstable and the state flips between two
-basins — a route to chaos even without forcing.
-## code::noise:: injects heavy-tailed (Lévy) kicks (shaped by code::tail::, like
-link::Classes/Fracflight::) so the limit cycle is jostled by rare large impulses;
-near a bifurcation this produces stochastic mode-switching and coherence resonance.
+(1), where the rest point at 0 becomes unstable and the state can flip between basins.
+## code::feedback:: adds a slow feedback state, making the flow three-dimensional.
+That is what admits chaos: at code::feedback = 0:: the flow is two-dimensional and can
+only settle into a limit cycle. Chaos also needs code::force > 0:: (or code::noise::);
+the autonomous system stays periodic. It arrives in windows rather than everywhere, so
+sweep code::feedback:: and code::fbRate:: to find them.
+## code::noise:: injects heavy-tailed (Lévy) kicks shaped by code::tail::, so the cycle
+is jostled by rare large impulses.
 ::
 
 Two outputs: code::[position x, velocity x']::. Pitch tracks code::freq:: exactly only
-near code::mu = 0::; the period stretches as code::mu:: and code::well:: rise.
+near code::mu = 0::; the period stretches as code::mu:: and code::well:: rise. Sub-steps
+are added automatically beyond code::oversample:: when code::freq:: or code::mu:: would
+otherwise destabilise the integrator.
 
 classmethods::
 
@@ -31,36 +36,45 @@ Natural frequency (Hz). Default 110.
 argument:: mu
 Nonlinearity / damping, 0–50. ~0 sine, higher = relaxation. Default 1.
 argument:: shape
-Damping morph: 0 Van der Pol (1-x^2), 1 Rayleigh (1-(x'/w)^2). Default 0.
+Damping morph: 0 position-based (1-x^2), 1 velocity-based (1-x'^2). Default 0.
 argument:: well
-Potential morph: 0 single well, 1 double well (Duffing). Default 0.
+Potential morph: 0 single well, 1 double well. Default 0.
 argument:: force
-Amplitude of the sinusoidal forcing term. Default 0.
+Amplitude of the sinusoidal forcing term, natural units (roughly 0–10). Default 0.
 argument:: forceFreq
 Frequency of the forcing term (Hz). Default 55.
+argument:: feedback
+Slow-feedback strength, 0–20. Above 0 the flow is 3D and can be chaotic. Default 0.
+argument:: fbRate
+Relaxation rate of the feedback state, 0.001–4. Low is slow. Default 0.1.
 argument:: noise
 Amount of heavy-tailed stochastic forcing. Default 0.
 argument:: tail
 Lévy stability index for the noise, 0.5–2. 2 = Gaussian, lower = heavier tails. Default 2.
 argument:: oversample
-Integration sub-steps per sample, 1–32. Raise for stability at high code::mu::/code::freq::. Default 4.
+Integration sub-steps per sample, 1–32. Default 4.
 argument:: mul
 argument:: add
 
 examples::
 code::
-// mu as waveshaper: mu~0 is a sine; raising it bends the cycle into a relaxation wave.
 { Limcycle.ar(110, MouseX.kr(0.05, 12), oversample: 16)[0] * 0.3 ! 2 }.play;
 
-// shape morph: same energy, different asymmetry as damping shifts Van der Pol -> Rayleigh.
 { Limcycle.ar(110, 6, MouseX.kr(0, 1), oversample: 16)[0] * 0.3 ! 2 }.play;
 
-// double-well chaos: push well up and the state flips between two basins, no forcing needed.
-{ Limcycle.ar(90, 4, 0, MouseX.kr(0, 1), oversample: 16)[0] * 0.3 ! 2 }.play;
+{ Limcycle.ar(80, 6, 0, 1, 2, 120, MouseX.kr(0, 4), 0.05, oversample: 16)[0] * 0.25 ! 2 }.play;
 
-// stochastic kicks: heavy-tailed forcing jostles the cycle; lower tail = rarer, bigger jumps.
-{ Limcycle.ar(110, 3, 0, 0.2, 0, 55, MouseX.kr(0, 400), MouseY.kr(2, 0.6), 16)[0] * 0.2 ! 2 }.play;
+{ Limcycle.ar(110, 0.05, 0, 1, 8, 110, 3, MouseX.kr(0.01, 0.3), oversample: 16)[0] * 0.2 ! 2 }.play;
 
-// forced -> chaos: strong sinusoidal forcing period-doubles into chaos.
-{ Limcycle.ar(80, 5, 0, 0, MouseX.kr(0, 8000), 120, 0, 2, 12)[0] * 0.2 ! 2 }.play;
+{ Limcycle.ar(80, 5, 0, 0, MouseX.kr(0, 10), 120, oversample: 12)[0] * 0.2 ! 2 }.play;
+
+{ Limcycle.ar(110, 3, 0, 0.2, 0, 55, 0, 0.1, MouseX.kr(0, 1.5), MouseY.kr(2, 0.6), 16)[0] * 0.2 ! 2 }.play;
+
+{ Limcycle.ar(MouseX.kr(40, 400, 1), 8, 0.5, 1, 2.5, 90, 1.5, 0.03, 0.2, 1.2, 16)[0] * 0.2 ! 2 }.play;
+
+{ var l = Limcycle.ar(90, MouseY.kr(1, 10), 0, 1, 3, 137, 2, 0.04, oversample: 16);
+  ((l[0] * 0.25) + (l[1] * 0.1)) ! 2 }.play;
+
+{ var l = Limcycle.ar(60, 7, 0, 1, 2, 93, 2.5, 0.03, oversample: 16);
+  SinOsc.ar(300 + (l[0] * 600)) * l[1].abs * 0.2 ! 2 }.play;
 ::

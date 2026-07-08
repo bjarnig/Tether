@@ -19,7 +19,7 @@ classmethods::
 
 method:: ar
 argument:: freq
-Scan frequency (Hz) — the pitch. Default 110.
+Scan frequency (Hz), the pitch. Default 110.
 argument:: size
 Number of masses in the ring (fixed). Default 64.
 argument:: rate
@@ -39,15 +39,11 @@ argument:: add
 
 examples::
 code::
-// a slowly morphing wavetable tone
 { Scangen.ar(110, 64, 0.05, 0.2, 0.01) * 0.3 ! 2 }.play;
 
-// evolution speed: from near-static wavetable to churning texture
 { Scangen.ar(110, 64, MouseX.kr(0.005, 0.4), 0.2, 0.02) * 0.3 ! 2 }.play;
 
-// tension sweeps the lattice's resonant character
 { Scangen.ar(80, 96, 0.06, MouseX.kr(0.01, 0.48), 0.01) * 0.3 ! 2 }.play;
 
-// nonlinear springs: large swings distort and destabilise the shape
 { Scangen.ar(90, 64, 0.08, 0.3, 0.005, 0.001, MouseX.kr(0, 4), 0.01) * 0.25 ! 2 }.play;
 ::

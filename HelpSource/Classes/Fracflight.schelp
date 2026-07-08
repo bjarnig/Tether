@@ -8,7 +8,7 @@ description::
 A breakpoint walk combining three processes: Ornstein–Uhlenbeck mean reversion
 (each point pulled toward a home value), fractional Brownian motion via the
 code::hurst:: exponent (>0.5 persistent/smooth, <0.5 anti-persistent/rough), and
-Lévy steps via code::levy:: (heavy tails — rare large jumps). code::knum:: is
+Lévy steps via code::levy:: (heavy tails, rare large jumps). code::knum:: is
 fixed at build time.
 
 classmethods::
@@ -45,6 +45,5 @@ argument:: add
 
 examples::
 code::
-// sweep the Hurst exponent: rough to smooth
 { Fracflight.ar(150, 150, 16, MouseX.kr(0.1, 0.9), ampReversion: 0.1, ampStep: 0.3) * 0.2 ! 2 }.play;
 ::

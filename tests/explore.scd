@@ -36,7 +36,7 @@ s.waitForBoot {
 };
 )
 
-// ---------- Gendreve — mean-reverting walk (out 0 of 2) ----------
+// ---------- Gendreve: mean-reverting chaotic walk (out 0 of 2) ----------
 (
 ~roll.(Gendreve, [
 	[\minfreq,      { exprand(40, 400) }],
@@ -44,12 +44,8 @@ s.waitForBoot {
 	[\knum,         { rrand(4, 24) }],
 	[\ampStiffness, { rrand(0.0, 1.0) }],
 	[\durStiffness, { rrand(0.0, 1.0) }],
-	[\ampNoise,     { rrand(0.05, 0.6) }],
-	[\durNoise,     { rrand(0.05, 0.6) }],
-	[\ampDist,      { rrand(0, 6) }],
-	[\ampDistParam, { rrand(0.0, 1.0) }],
-	[\durDist,      { rrand(0, 6) }],
-	[\durDistParam, { rrand(0.0, 1.0) }],
+	[\ampKick,      { rrand(1.2, 8.0) }],
+	[\durKick,      { rrand(1.2, 8.0) }],
 	[\templateType, { rrand(0, 4) }],
 	[\templateSkew, { rrand(0.1, 0.9) }],
 	[\centerDur,    { rrand(0.2, 0.8) }],
@@ -57,7 +53,7 @@ s.waitForBoot {
 ]);
 )
 
-// ---------- Diststoch — free walk, barriers, jumps ----------
+// ---------- Diststoch: free chaotic walk, barriers ----------
 (
 ~roll.(Diststoch, [
 	[\minfreq,          { exprand(40, 400) }],
@@ -65,14 +61,10 @@ s.waitForBoot {
 	[\knum,             { rrand(6, 24) }],
 	[\ampDist,          { rrand(0, 6) }],
 	[\ampDistParam,     { rrand(0.0, 1.0) }],
-	[\ampDistParamWalk, { rrand(0.0, 0.05) }],
 	[\durDist,          { rrand(0, 6) }],
 	[\durDistParam,     { rrand(0.0, 1.0) }],
-	[\durDistParamWalk, { rrand(0.0, 0.05) }],
-	[\ampStep,          { rrand(0.05, 0.4) }],
-	[\durStep,          { rrand(0.0, 0.2) }],
-	[\ampJump,          { rrand(0.0, 1.0) }],
-	[\durJump,          { rrand(0.0, 1.0) }],
+	[\ampKick,          { rrand(1.2, 6.0) }],
+	[\durKick,          { rrand(0.0, 4.0) }],
 	[\ampLo,            { rrand(-1.0, -0.3) }],
 	[\ampHi,            { rrand(0.3, 1.0) }],
 	[\barrierLo,        { rrand(0, 3) }],
